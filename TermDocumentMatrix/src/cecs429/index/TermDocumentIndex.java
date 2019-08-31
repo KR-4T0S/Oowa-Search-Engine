@@ -38,12 +38,20 @@ public class TermDocumentIndex implements Index {
 	@Override
 	public List<Posting> getPostings(String term) {
 		List<Posting> results = new ArrayList<>();
-		
-		// TODO: implement this method.
-		// Binary search the mVocabulary array for the given term.
-		// Walk down the mMatrix row for the term and collect the document IDs (column indices)
-		// of the "true" entries.
-		
+                
+                // Binary search to find row for term
+                int termIndex = Collections.binarySearch(mVocabulary, term);
+                
+                if (termIndex >= 0) {
+                    // Walk down columns to find document ids if term is found
+                    for(int i = 0; i < mCorpusSize; i++) {
+                        if(mMatrix[termIndex][i]) {
+                            // System.out.println("[DEBUG] Term found in Ch ID: " + i);
+                            results.add(new Posting(i));
+                        }
+                    }
+                }
+                		
 		return results;
 	}
 	

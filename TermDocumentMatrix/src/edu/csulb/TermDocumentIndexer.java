@@ -138,13 +138,23 @@ public class TermDocumentIndexer {
 		// Index the current working directory.
 		final Path currentWorkingPath = Paths.get("").toAbsolutePath();
 		Index index = indexDirectory(currentWorkingPath);
-		
-		// We aren't ready to use a full query parser; for now, we'll only support single-term queries.
-		String query = "whale"; // hard-coded search for "whale"
-		for (Posting p : index.getPostings(query)) {
-			System.out.println("Document ID " + p.getDocumentId());
-		}
-		
-		// TODO: fix this application so the user is asked for a term to search.
+                
+                // Variables for input/search
+                String query;
+                Scanner input = new Scanner(System.in);
+
+		do {
+                    // We aren't ready to use a full query parser; for now, we'll only support single-term queries.
+                    System.out.println("===== Simple Search Engine =====");
+                    System.out.println("[\'quit\' to exit program]");
+                    // Start prompt for word
+                    System.out.print("Search:\t");
+                    
+                    query = input.nextLine(); // hard-coded search for "whale"
+                    query = query.toLowerCase();
+                    for (Posting p : index.getPostings(query)) {
+                        System.out.println("Document ID " + p.getDocumentId());
+                    }
+                } while(!query.equals("quit"));
 	}
 }
