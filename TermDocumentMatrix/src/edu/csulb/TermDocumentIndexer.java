@@ -147,13 +147,16 @@ public class TermDocumentIndexer {
                     // We aren't ready to use a full query parser; for now, we'll only support single-term queries.
                     System.out.println("===== Simple Search Engine =====");
                     System.out.println("[\'quit\' to exit program]");
+                    
                     // Start prompt for word
                     System.out.print("Search:\t");
-                    
-                    query = input.nextLine(); // hard-coded search for "whale"
+                    query = input.nextLine();
                     query = query.toLowerCase();
-                    for (Posting p : index.getPostings(query)) {
-                        System.out.println("Document ID " + p.getDocumentId());
+                    
+                    if (!query.equals("quit")) {
+                        for (Posting p : index.getPostings(query)) {
+                            System.out.println("Document ID " + p.getDocumentId());
+                        }
                     }
                 } while(!query.equals("quit"));
 	}
