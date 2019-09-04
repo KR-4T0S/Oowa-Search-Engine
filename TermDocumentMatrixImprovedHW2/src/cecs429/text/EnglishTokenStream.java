@@ -1,5 +1,6 @@
 package cecs429.text;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.util.*;
 

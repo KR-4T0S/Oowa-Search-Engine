@@ -5,20 +5,41 @@ import cecs429.documents.Document;
 import cecs429.documents.DocumentCorpus;
 import cecs429.index.Index;
 import cecs429.index.Posting;
+import cecs429.index.TermDocumentIndex;
 import cecs429.text.BasicTokenProcessor;
+import cecs429.text.EnglishTokenStream;
+import java.io.StringReader;
 
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Scanner;
 
 public class BetterTermDocumentIndexer {
 	public static void main(String[] args) {
 		DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("").toAbsolutePath(), ".txt");
-		Index index = indexCorpus(corpus) ;
-		// We aren't ready to use a full query parser; for now, we'll only support single-term queries.
-		String query = "whale"; // hard-coded search for "whale"
-		for (Posting p : index.getPostings(query)) {
-			System.out.println("Document " + corpus.getDocument(p.getDocumentId()).getTitle());
-		}
+                Index index = indexCorpus(corpus);
+                
+                // Variables for input/search
+                String query;
+                Scanner input = new Scanner(System.in);
+
+		do {
+                    // We aren't ready to use a full query parser; for now, we'll only support single-term queries.
+                    System.out.println("===== Simple Search Engine =====");
+                    System.out.println("[\'quit\' to exit program]");
+                    
+                    // Start prompt for word
+                    System.out.print("Search:\t");
+                    query = input.nextLine();
+                    //query = query.toLowerCase();
+                    
+                    if (!query.equals("quit")) {
+                        for (Posting p : index.getPostings(query)) {
+                                System.out.println("Document " + corpus.getDocument(p.getDocumentId()).getTitle());
+                        }
+                    }
+                } while(!query.equals("quit"));
+                  
 	}
 	
 	private static Index indexCorpus(DocumentCorpus corpus) {
@@ -29,15 +50,35 @@ public class BetterTermDocumentIndexer {
 		
 		// TODO:
 		// Get all the documents in the corpus by calling GetDocuments().
+                Iterable<Document> docs = corpus.getDocuments();
+                
 		// Iterate through the documents, and:
 		// Tokenize the document's content by constructing an EnglishTokenStream around the document's content.
 		// Iterate through the tokens in the document, processing them using a BasicTokenProcessor,
 		//		and adding them to the HashSet vocabulary.
-		
+		for (Document d: docs) {
+                    System.out.println("Title: " + d.getTitle() + " \t| ID: " + d.getId());
+                    EnglishTokenStream stream = new EnglishTokenStream(d.getContent());
+                    Iterable<String> tokens = stream.getTokens();
+                    for (String s: tokens) {
+                        vocabulary.add(processor.processToken(s));
+                    }
+                 }
+                
 		// TODO:
 		// Constuct a TermDocumentMatrix once you know the size of the vocabulary.
+                TermDocumentIndex matrix = new TermDocumentIndex(vocabulary, vocabulary.size());
+                
 		// THEN, do the loop again! But instead of inserting into the HashSet, add terms to the index with addPosting.
-		
-		return null;
+                for (Document d: docs) {
+                    EnglishTokenStream stream = new EnglishTokenStream(d.getContent());
+                    Iterable<String> tokens = stream.getTokens();
+                    
+                    for (String s: tokens) {
+                        matrix.addTerm(processor.processToken(s), d.getId());
+                    }
+                 }
+                
+		return matrix;
 	}
 }
