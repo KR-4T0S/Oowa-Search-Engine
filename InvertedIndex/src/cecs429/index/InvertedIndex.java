@@ -6,7 +6,7 @@ public class InvertedIndex implements Index{
     private final Map<String, LinkedList<Posting>> mIndex;
     
     // Constructor
-    public InvertedIndex(Collection<String> vocabulary) {
+    public InvertedIndex() {
         mIndex = new HashMap<>();
     }
     

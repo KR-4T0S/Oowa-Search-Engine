@@ -43,38 +43,24 @@ public class InvertedIndexer {
 	}
     
     private static Index indexCorpus(DocumentCorpus corpus) {
-		HashSet<String> vocabulary = new HashSet<>();
+		//HashSet<String> vocabulary = new HashSet<>();
 		BasicTokenProcessor processor = new BasicTokenProcessor();
-		
-		// First, build the vocabulary hash set.
-		
-		// TODO:
+		InvertedIndex invertedIndex = new InvertedIndex();
+                
 		// Get all the documents in the corpus by calling GetDocuments().
                 Iterable<Document> docs = corpus.getDocuments();
                 
 		// Iterate through the documents, and:
 		// Tokenize the document's content by constructing an EnglishTokenStream around the document's content.
 		// Iterate through the tokens in the document, processing them using a BasicTokenProcessor,
-		//		and adding them to the HashSet vocabulary.
+		//		and adding them to the Inverted Index
 		for (Document d: docs) {
-                    System.out.println("Title: " + d.getTitle() + " \t| ID: " + d.getId());
-                    EnglishTokenStream stream = new EnglishTokenStream(d.getContent());
-                    Iterable<String> tokens = stream.getTokens();
-                    for (String s: tokens) {
-                        vocabulary.add(processor.processToken(s));
-                    }
-                 }
-                
-		// TODO:
-		// Constuct a TermDocumentMatrix once you know the size of the vocabulary.
-                InvertedIndex invertedIndex = new InvertedIndex(vocabulary);
-                
-		// THEN, do the loop again! But instead of inserting into the HashSet, add terms to the index with addPosting.
-                for (Document d: docs) {
                     EnglishTokenStream stream = new EnglishTokenStream(d.getContent());
                     Iterable<String> tokens = stream.getTokens();
                     
+                    System.out.println("Title: " + d.getTitle() + " \t| ID: " + d.getId());
                     for (String s: tokens) {
+                        //vocabulary.add(processor.processToken(s));
                         invertedIndex.addTerm(processor.processToken(s), d.getId());
                     }
                  }
