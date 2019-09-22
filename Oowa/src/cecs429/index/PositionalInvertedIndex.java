@@ -1,12 +1,26 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package cecs429.index;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-public class InvertedIndex implements Index{
+/**
+ *
+ * @author RICHIE
+ */
+public class PositionalInvertedIndex implements Index {
     private final Map<String, LinkedList<Posting>> mIndex;
     
     // Constructor
-    public InvertedIndex() {
+    public PositionalInvertedIndex() {
         mIndex = new HashMap<>();
     }
     
@@ -21,27 +35,26 @@ public class InvertedIndex implements Index{
         return result = new ArrayList<>(); // Returns empty list otherwise
     }
     
-    public void addTerm(String term, int documentId) { 
+    public void addTerm(String term, int documentId, int pos) { 
         // Since it's sequential, we're never returning to the same 
-        // doc again in the future.
+        // doc again in the future. LinkedList helps do O(1)
         if (mIndex.containsKey(term)) {
-            // Only add to Posting list if it hasn't already 
-            // been done for current document (last of list)
-            if (mIndex.get(term).getLast().getDocumentId() != documentId) {
-                // Adds posting to term
+            // Still working on existing document
+            if (mIndex.get(term).getLast().getDocumentId() == documentId) {
+                mIndex.get(term).getLast().addPos(pos);
+            } else { // New document, new posting
                 mIndex.get(term).add(new Posting(documentId));
-            //    System.out.println("Adding Existing Term: " + term + " | Doc: " 
-            //            + documentId);
+                mIndex.get(term).getLast().addPos(pos);
             }
-            
         } else {
             // Term hasn't been indexed, add with new LinkedList as object
             LinkedList<Posting> postings = new LinkedList<>();
             postings.add(new Posting(documentId));
             mIndex.put(term, postings);
-            //System.out.println("Adding New Term: " + term + " | Doc: " 
-            //        + documentId);
+            mIndex.get(term).getLast().addPos(pos);
         }
+        //System.out.println("\tDocument : " + documentId + "\t| Term: " + term + "\t| Position: " + pos);
+        //System.out.println("\t\tPositions: " + mIndex.get(term).getLast().getPositions().toString());
     }
     
     @Override

@@ -1,7 +1,5 @@
 package cecs429.documents;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -36,9 +34,9 @@ public class TextFileDocument implements FileDocument {
 	@Override
 	public Reader getContent() {
 		try {
-			return Files.newBufferedReader(mFilePath);
+                    return Files.newBufferedReader(mFilePath);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+                    throw new RuntimeException(e);
 		}
 	}
 	

@@ -30,7 +30,6 @@ public class JsonSeparator {
         // Iterate through all objects and write into separate file.
         int counter = 0;
         for (JsonDoc doc: docs) {
-            counter++;
             try {
                 FileWriter writer = new FileWriter(currentWorkingPath.toString() + "\\jsonfiles\\" + counter + ".json");
                 gson.toJson(doc, writer);

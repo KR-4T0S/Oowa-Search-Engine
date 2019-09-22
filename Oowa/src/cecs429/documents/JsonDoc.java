@@ -1,4 +1,4 @@
-package jsonseparator;
+package cecs429.documents;
 
 public class JsonDoc {
     private String body;
