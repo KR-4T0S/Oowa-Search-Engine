@@ -6,6 +6,7 @@ import cecs429.documents.DocumentCorpus;
 import cecs429.index.Index;
 import cecs429.index.PositionalInvertedIndex;
 import cecs429.index.Posting;
+import cecs429.text.AdvancedTokenProcessor;
 import cecs429.text.BasicTokenProcessor;
 import cecs429.text.EnglishTokenStream; 
 
@@ -58,7 +59,7 @@ public class Oowa {
     
     private static Index indexCorpus(DocumentCorpus corpus) {
 		//HashSet<String> vocabulary = new HashSet<>();
-		BasicTokenProcessor processor = new BasicTokenProcessor();
+		AdvancedTokenProcessor processor = new AdvancedTokenProcessor();
 		PositionalInvertedIndex invertedIndex = new PositionalInvertedIndex();
                 
 		// Get all the documents in the corpus by calling GetDocuments().
