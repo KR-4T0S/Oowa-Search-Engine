@@ -3,6 +3,8 @@ package unittesting;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.tartarus.snowball.SnowballStemmer;
+import org.tartarus.snowball.ext.englishStemmer;
 
 public class UnitTesting {
 
@@ -10,27 +12,67 @@ public class UnitTesting {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        String _token = "192.168.0.1";
-            List<String> result = new ArrayList();
-            
-            // TODO:    remove non-alphanumeric characters from start & end of string
-            //          (!He,llo. => He,llo) (192.186.1.1 => 192.186.1.1)
-            _token = _token.replaceAll("(\\W+)(.)(\\W+)", "");
-            
-            // TODO:    remove all apostrophies and quotation marks
-            _token = _token.replaceAll("\'|\"", "");
-            
-            // TODO:    if hyphenated: split AND remove hyphens (turn to single word)
-            result.addAll(Arrays.asList(_token.split("-")));
-            result.add(_token.replaceAll("-", ""));
-            
-            // TODO:    to lowercase
-            for (String str : result) {
-                str = str.toLowerCase();
-            }
-            
-            System.out.println(result.toString());
+       System.out.println(stemmer("accepting"));
     }
     
+   
+    public static String stemmer(String str) {
+        SnowballStemmer snowballStemmer = new englishStemmer();
+        snowballStemmer.setCurrent(str);
+        snowballStemmer.stem();
+        String result = snowballStemmer.getCurrent();
+        
+        return result;
+    }    
+
+    public static String removeNonAlphanum(String str) {
+            String result = str;
+                       
+            // Iterate from left
+            int stopLeft = 0;
+            for (int i = 0; i < result.length(); i++) {
+                // stop once first alphanum character is found
+                if (Character.isLetter(result.charAt(i)) || 
+                       Character.isDigit(result.charAt(i))) {
+                    break;
+                } else {
+                    stopLeft++; 
+                }
+            }
+            result = result.substring(stopLeft);
+            
+            // Iterate from right
+            int stopRight = 0;
+            for (int i = result.length() - 1; i >= 0; i--) {
+                // stop once first alphanum character is found
+                if (Character.isLetter(result.charAt(i)) || 
+                       Character.isDigit(result.charAt(i))) {
+                    break;
+                } else {
+                    stopRight++;
+                }
+            }
+            result = result.substring(0, (result.length() - 1) - (stopRight - 1));
+            
+            return result;
+    }
     
+    public static List<String> removeHyphen(String str) {
+
+        List<String> result = new ArrayList<>(Arrays.asList(str.split("-")));
+        if (result.size() != 1) {
+            result.add(str.replaceAll("-", ""));
+        }
+            
+        return result;
+    }
+    
+    public static List<String> toLower(List<String> list) {
+        
+        for (int i = 0; i < list.size(); i++) {
+            list.set(i, list.get(i).toLowerCase());
+        }
+        
+        return list;
+    }
 }

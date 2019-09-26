@@ -35,23 +35,25 @@ public class PositionalInvertedIndex implements Index {
         return result = new ArrayList<>(); // Returns empty list otherwise
     }
     
-    public void addTerm(String term, int documentId, int pos) { 
-        // Since it's sequential, we're never returning to the same 
-        // doc again in the future. LinkedList helps do O(1)
-        if (mIndex.containsKey(term)) {
-            // Still working on existing document
-            if (mIndex.get(term).getLast().getDocumentId() == documentId) {
-                mIndex.get(term).getLast().addPos(pos);
-            } else { // New document, new posting
-                mIndex.get(term).add(new Posting(documentId));
+    public void addTerm(List<String> terms, int documentId, int pos) { 
+        for (String term: terms) {
+            // Since it's sequential, we're never returning to the same 
+            // doc again in the future. LinkedList helps do O(1)
+            if (mIndex.containsKey(term)) {
+                // Still working on existing document
+                if (mIndex.get(term).getLast().getDocumentId() == documentId) {
+                    mIndex.get(term).getLast().addPos(pos);
+                } else { // New document, new posting
+                    mIndex.get(term).add(new Posting(documentId));
+                    mIndex.get(term).getLast().addPos(pos);
+                }
+            } else {
+                // Term hasn't been indexed, add with new LinkedList as object
+                LinkedList<Posting> postings = new LinkedList<>();
+                postings.add(new Posting(documentId));
+                mIndex.put(term, postings);
                 mIndex.get(term).getLast().addPos(pos);
             }
-        } else {
-            // Term hasn't been indexed, add with new LinkedList as object
-            LinkedList<Posting> postings = new LinkedList<>();
-            postings.add(new Posting(documentId));
-            mIndex.put(term, postings);
-            mIndex.get(term).getLast().addPos(pos);
         }
         //System.out.println("\tDocument : " + documentId + "\t| Term: " + term + "\t| Position: " + pos);
         //System.out.println("\t\tPositions: " + mIndex.get(term).getLast().getPositions().toString());

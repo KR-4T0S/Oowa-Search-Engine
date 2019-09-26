@@ -3,6 +3,9 @@ package cecs429.text;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.tartarus.snowball.SnowballStemmer;
+import org.tartarus.snowball.ext.englishStemmer;
+
 
 public class AdvancedTokenProcessor implements TokenProcessor {
     
@@ -13,14 +16,13 @@ public class AdvancedTokenProcessor implements TokenProcessor {
             
             // TODO:    remove non-alphanumeric characters from start & end of string
             //          (!He,llo. => He,llo) (192.186.1.1 => 192.186.1.1)
-            _token = _token.replaceAll("\\W()\\W", "");
+            _token = removeNonAlphanum(_token);
             
             // TODO:    remove all apostrophies and quotation marks
-            _token = _token.replaceAll("\'|\"", "");
+            _token = removeQuote(_token);
             
             // TODO:    if hyphenated: split AND remove hyphens (turn to single word)
-            result = Arrays.asList(_token.split("-"));
-            result.add(_token.replaceAll("-", ""));
+            result = removeHyphen(_token);
             
             // TODO:    to lowercase
             for (String str : result) {
@@ -28,8 +30,74 @@ public class AdvancedTokenProcessor implements TokenProcessor {
             }
             
             // TODO:    stem using Porter2 stemmer
-            return null;
+            
+            
+            return result;
 	}
+        
+        private String stemmer(String str) {
+            SnowballStemmer snowballStemmer = new englishStemmer();
+            snowballStemmer.setCurrent(str);
+            snowballStemmer.stem();
+            String result = snowballStemmer.getCurrent();
+
+            return result;
+        }
+        
+        private List<String> toLower(List<String> list) {
+            for (int i = 0; i < list.size(); i++) {
+                list.set(i, list.get(i).toLowerCase());
+            }
+
+            return list;
+        }
+        
+        private List<String> removeHyphen(String str) {
+            List<String> result = new ArrayList<>(Arrays.asList(str.split("-")));
+            if (result.size() != 1) {
+                result.add(str.replaceAll("-", ""));
+            }
+
+            return result;
+        }
+        
+        private String removeQuote(String str) {
+            String result = str;
+            
+            return result.replaceAll("\'|\"", "");
+        }
+        
+        private String removeNonAlphanum(String str) {
+            String result = str;
+                       
+            // Iterate from left
+            int stopLeft = 0;
+            for (int i = 0; i < result.length(); i++) {
+                // stop once first alphanum character is found
+                if (Character.isLetter(result.charAt(i)) || 
+                       Character.isDigit(result.charAt(i))) {
+                    break;
+                } else {
+                    stopLeft++; 
+                }
+            }
+            result = result.substring(stopLeft);
+            
+            // Iterate from right
+            int stopRight = 0;
+            for (int i = result.length() - 1; i >= 0; i--) {
+                // stop once first alphanum character is found
+                if (Character.isLetter(result.charAt(i)) || 
+                       Character.isDigit(result.charAt(i))) {
+                    break;
+                } else {
+                    stopRight++;
+                }
+            }
+            result = result.substring(0, (result.length() - 1) - (stopRight - 1));
+            
+            return result;
+        }
 
      
     

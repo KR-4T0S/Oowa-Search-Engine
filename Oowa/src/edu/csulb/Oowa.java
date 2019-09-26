@@ -7,7 +7,6 @@ import cecs429.index.Index;
 import cecs429.index.PositionalInvertedIndex;
 import cecs429.index.Posting;
 import cecs429.text.AdvancedTokenProcessor;
-import cecs429.text.BasicTokenProcessor;
 import cecs429.text.EnglishTokenStream; 
 
 import java.nio.file.Paths;
