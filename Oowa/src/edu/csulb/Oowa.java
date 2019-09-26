@@ -57,6 +57,8 @@ public class Oowa {
 	}
     
     private static Index indexCorpus(DocumentCorpus corpus) {
+                long startTime = System.currentTimeMillis();
+
 		//HashSet<String> vocabulary = new HashSet<>();
 		AdvancedTokenProcessor processor = new AdvancedTokenProcessor();
 		PositionalInvertedIndex invertedIndex = new PositionalInvertedIndex();
@@ -80,6 +82,10 @@ public class Oowa {
                         invertedIndex.addTerm(processor.processToken(s), d.getId(), currentPosition);
                     }
                  }
+                
+                long endTime = System.currentTimeMillis();
+                long duration = (endTime - startTime);
+                System.out.println("== Time to index: " + duration + "ms ==");
                 
 		return invertedIndex;
 	}

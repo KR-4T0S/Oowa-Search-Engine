@@ -25,23 +25,23 @@ public class AdvancedTokenProcessor implements TokenProcessor {
             result = removeHyphen(_token);
             
             // TODO:    to lowercase
-            for (String str : result) {
-                str = str.toLowerCase();
-            }
+            result = toLower(result);
             
             // TODO:    stem using Porter2 stemmer
-            
+            result = snowballStemmer(result);
             
             return result;
 	}
         
-        private String stemmer(String str) {
-            SnowballStemmer snowballStemmer = new englishStemmer();
-            snowballStemmer.setCurrent(str);
-            snowballStemmer.stem();
-            String result = snowballStemmer.getCurrent();
+        private List<String> snowballStemmer(List<String> list) {
+            for (int i = 0; i < list.size(); i++) {
+                SnowballStemmer snowballStemmer = new englishStemmer();
+                snowballStemmer.setCurrent(list.get(i));
+                snowballStemmer.stem();
+                list.set(i, snowballStemmer.getCurrent());
+            }
 
-            return result;
+            return list;
         }
         
         private List<String> toLower(List<String> list) {
