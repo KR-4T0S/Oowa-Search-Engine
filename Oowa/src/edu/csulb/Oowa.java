@@ -8,6 +8,7 @@ import cecs429.index.PositionalInvertedIndex;
 import cecs429.index.Posting;
 import cecs429.text.AdvancedTokenProcessor;
 import cecs429.text.EnglishTokenStream; 
+import cecs429.query.*;
 
 import java.nio.file.Paths;
 import java.util.Scanner;
@@ -30,6 +31,9 @@ public class Oowa {
                 DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
                 Index index = indexCorpus(corpus);
                 
+                // Query Parser
+                BooleanQueryParser queryParser = new BooleanQueryParser();
+                
 		do {
                     // We aren't ready to use a full query parser; for now, we'll only support single-term queries.
                     System.out.println("===== Simple Search Engine =====");
@@ -38,15 +42,17 @@ public class Oowa {
                     // Start prompt for word
                     System.out.print("Search:\t");
                     query = inputQuery.nextLine();
+                    //QueryComponent queryComponent = queryParser.parseQuery(query);
                     //query = query.toLowerCase();
                     
                     if (!query.equals("quit")) {
-                        if (index.getPostings(query).isEmpty()) {
+                        QueryComponent queryComponent = queryParser.parseQuery(query);
+                        if (queryComponent.getPostings(index).isEmpty()) {
                             System.out.println("\tNo Results! :(");
                         } else {
-                            System.out.println("\t" + index.getPostings(query).size() + " Total Results: ");
+                            System.out.println("\t" + queryComponent.getPostings(index).size() + " Total Results: ");
                             int counter = 0;
-                            for (Posting p : index.getPostings(query)) {
+                            for (Posting p : queryComponent.getPostings(index)) {
                                 counter++;
                                 System.out.println("\t\t" + counter + ": " + corpus.getDocument(p.getDocumentId()).getTitle());
                             }
