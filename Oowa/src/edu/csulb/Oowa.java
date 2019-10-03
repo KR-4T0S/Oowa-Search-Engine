@@ -28,8 +28,15 @@ public class Oowa {
                 
                 // Load corpus
                 //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-                DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
+                //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
+                long startTime = System.currentTimeMillis();
+                DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\Richie\\Desktop\\CECS-429\\JsonSeparator\\jsonfiles"), ".json");
                 Index index = indexCorpus(corpus);
+                long endTime = System.currentTimeMillis();
+                long duration = (endTime - startTime);
+                
+                System.out.println("== Time to index: " + duration + "ms ==");
+                
                 
                 // Query Parser
                 BooleanQueryParser queryParser = new BooleanQueryParser();
@@ -56,6 +63,7 @@ public class Oowa {
                                 counter++;
                                 System.out.println("\t\t" + counter + ": " + corpus.getDocument(p.getDocumentId()).getTitle());
                             }
+                            System.out.println("Total Results: " + counter);
                         }
                     }
                 } while(!query.equals("quit"));
@@ -88,10 +96,6 @@ public class Oowa {
                         invertedIndex.addTerm(processor.processToken(s), d.getId(), currentPosition);
                     }
                  }
-                
-                long endTime = System.currentTimeMillis();
-                long duration = (endTime - startTime);
-                System.out.println("== Time to index: " + duration + "ms ==");
                 
 		return invertedIndex;
 	}
