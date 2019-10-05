@@ -1,13 +1,8 @@
 package edu.csulb;
 
-import cecs429.documents.DirectoryCorpus;
-import cecs429.documents.Document;
-import cecs429.documents.DocumentCorpus;
-import cecs429.index.Index;
-import cecs429.index.PositionalInvertedIndex;
-import cecs429.index.Posting;
-import cecs429.text.AdvancedTokenProcessor;
-import cecs429.text.EnglishTokenStream; 
+import cecs429.documents.*;
+import cecs429.index.*;
+import cecs429.text.*; 
 import cecs429.query.*;
 
 import java.nio.file.Paths;
@@ -15,9 +10,7 @@ import java.util.Scanner;
 
 public class Oowa {
     public static void main(String[] args) {
-		
-                
-                // Variables for input/search
+                // Variables for input/query
                 String query, directory;
                 Scanner inputQuery = new Scanner(System.in);
                 Scanner inputDirectory = new Scanner(System.in);
@@ -26,20 +19,18 @@ public class Oowa {
                 //System.out.println("Enter directory: \t");
                 //directory = inputDirectory.nextLine();
                 
-                // Load corpus
-                //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-                //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
+                
                 long startTime = System.currentTimeMillis();
-                DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\Richie\\Desktop\\CECS-429\\JsonSeparator\\jsonfiles"), ".json");
+                
+                // Load corpus
+                DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
                 Index index = indexCorpus(corpus);
+                
+                
                 long endTime = System.currentTimeMillis();
                 long duration = (endTime - startTime);
                 
                 System.out.println("== Time to index: " + duration + "ms ==");
-                
-                
-                // Query Parser
-                BooleanQueryParser queryParser = new BooleanQueryParser();
                 
 		do {
                     // We aren't ready to use a full query parser; for now, we'll only support single-term queries.
@@ -49,26 +40,43 @@ public class Oowa {
                     // Start prompt for word
                     System.out.print("Search:\t");
                     query = inputQuery.nextLine();
-                    //QueryComponent queryComponent = queryParser.parseQuery(query);
-                    //query = query.toLowerCase();
                     
                     if (!query.equals("quit")) {
-                        QueryComponent queryComponent = queryParser.parseQuery(query);
-                        if (queryComponent.getPostings(index).isEmpty()) {
-                            System.out.println("\tNo Results! :(");
-                        } else {
-                            System.out.println("\t" + queryComponent.getPostings(index).size() + " Total Results: ");
-                            int counter = 0;
-                            for (Posting p : queryComponent.getPostings(index)) {
-                                counter++;
-                                System.out.println("\t\t" + counter + ": " + corpus.getDocument(p.getDocumentId()).getTitle());
-                            }
-                            System.out.println("Total Results: " + counter);
-                        }
+//                        // Stem query
+//                        SnowballStemmer snowballStemmer = new englishStemmer();
+//                        snowballStemmer.setCurrent(query);
+//                        snowballStemmer.stem();
+//                        query = snowballStemmer.getCurrent();
+                        
+                        getResults(query, index, corpus);
                     }
                 } while(!query.equals("quit"));
                   
 	}
+    
+    private static void getResults(String query, Index index, DocumentCorpus corpus) {
+            // Init query parsing component
+            BooleanQueryParser queryParser = new BooleanQueryParser();
+            QueryComponent queryComponent = queryParser.parseQuery(query);
+            // Default token processor
+            TokenProcessor tokenProcessor = new AdvancedTokenProcessor();
+            
+            // TODO: remove try-catch once fixed
+            try {
+                if (queryComponent.getPostings(index, tokenProcessor).isEmpty()) {
+                    System.out.println("\tNo Results..." + "\n\n");
+                } else {
+                    int counter = 0;
+                    for (Posting p : queryComponent.getPostings(index, tokenProcessor)) {
+                        counter++;
+                        System.out.println("\t" + counter + ": [ID:" + p.getDocumentId() + "] " + corpus.getDocument(p.getDocumentId()).getTitle());
+                    }
+                        System.out.println("Total Results: " + counter + "\n\n");
+                    }
+            } catch (Exception e) {
+                System.out.println("\u001B[31m" + e + "\u001B[0m");
+            }
+    }
     
     private static Index indexCorpus(DocumentCorpus corpus) {
                 long startTime = System.currentTimeMillis();
