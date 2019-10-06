@@ -6,9 +6,8 @@ import java.util.List;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
-
 public class AdvancedTokenProcessor implements TokenProcessor {
-    
+
     @Override
     public List<String> processToken(String token) {
         List<String> result = new ArrayList();
@@ -61,9 +60,9 @@ public class AdvancedTokenProcessor implements TokenProcessor {
     }
 
     private String removeQuote(String str) {
-        
+
         return str.replaceAll("\'|\"", "");
-        
+
     }
 
     private String removeNonAlphanum(String str) {
@@ -73,11 +72,11 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         int stopLeft = 0;
         for (int i = 0; i < str.length(); i++) {
             // stop once first alphanum character is found
-            if (Character.isLetter(str.charAt(i)) || 
-                   Character.isDigit(str.charAt(i))) {
+            if (Character.isLetter(str.charAt(i))
+                    || Character.isDigit(str.charAt(i))) {
                 break;
             } else {
-                stopLeft++; 
+                stopLeft++;
             }
         }
         str = str.substring(stopLeft);
@@ -86,8 +85,8 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         int stopRight = 0;
         for (int i = str.length() - 1; i >= 0; i--) {
             // stop once first alphanum character is found
-            if (Character.isLetter(str.charAt(i)) || 
-                   Character.isDigit(str.charAt(i))) {
+            if (Character.isLetter(str.charAt(i))
+                    || Character.isDigit(str.charAt(i))) {
                 break;
             } else {
                 stopRight++;
@@ -97,5 +96,5 @@ public class AdvancedTokenProcessor implements TokenProcessor {
 
         return str;
     }
-    
+
 }

@@ -17,14 +17,14 @@ import java.util.Map;
  * @author RICHIE
  */
 public class PositionalInvertedIndex implements Index {
+
     private final Map<String, LinkedList<Posting>> mIndex;
-    
+
     // Constructor
     public PositionalInvertedIndex() {
         mIndex = new HashMap<>();
     }
-    
-    
+
     @Override
     public List<Posting> getPostings(String term) {
         List<Posting> result;
@@ -34,9 +34,9 @@ public class PositionalInvertedIndex implements Index {
         }
         return result = new ArrayList<>(); // Returns empty list otherwise
     }
-    
-    public void addTerm(List<String> terms, int documentId, int pos) { 
-        for (String term: terms) {
+
+    public void addTerm(List<String> terms, int documentId, int pos) {
+        for (String term : terms) {
             // Since it's sequential, we're never returning to the same 
             // doc again in the future. LinkedList helps do O(1)
             if (mIndex.containsKey(term)) {
@@ -58,16 +58,16 @@ public class PositionalInvertedIndex implements Index {
         //System.out.println("\tDocument : " + documentId + "\t| Term: " + term + "\t| Position: " + pos);
         //System.out.println("\t\tPositions: " + mIndex.get(term).getLast().getPositions().toString());
     }
-    
+
     @Override
     public List<String> getVocabulary() {
         // O(1)
         // Turn keyset into an arraylist
         ArrayList<String> result = new ArrayList<>(mIndex.keySet());
-        
+
         // O(n*logn)
         Collections.sort(result);
-        
+
         // O(1) * O(n*logn) =  O(n*logn)
         return result;
     }

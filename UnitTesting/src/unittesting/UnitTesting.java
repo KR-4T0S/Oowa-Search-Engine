@@ -12,13 +12,7 @@ public class UnitTesting {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-       System.out.println(stemmer("photo").toString());
-       System.out.println(stemmer("gallery").toString());
-       System.out.println(stemmer("photo gallery").toString());
-       System.out.println(stemmer("gallery photo").toString());
-       System.out.println(stemmer("gallery + photo").toString());
-       System.out.println(stemmer("photo + gallery").toString());
-       System.out.println(stemmer("\"photo + gallery\"").toString());
+       System.out.println((int)'\n');
     }
     
     public static String stemmer(String str) {
