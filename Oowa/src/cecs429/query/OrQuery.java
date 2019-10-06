@@ -21,17 +21,18 @@ public class OrQuery implements QueryComponent {
 	
 	@Override
 	public List<Posting> getPostings(Index index, TokenProcessor processor) {
-            System.out.println("\u001B[31m" + "====== OrQuery.getPostings() ======" + "\u001B[0m");
-            System.out.println(mComponents.toString());
+            //System.out.println("\u001B[31m" + "====== OrQuery.getPostings() ======" + "\u001B[0m");
+            //System.out.println("\t" + mComponents.toString());
             List<Posting> result = new ArrayList();
 
             // For each component retrieved, merge results to one list of results
             // Only merge if postings does not already exist
             for (QueryComponent component: mComponents ) {
-                List<Posting> componentResults = new ArrayList();
-                for (String s: processor.processToken(component.toString())) {
-                    componentResults = unionMergePostings(index.getPostings(s), componentResults);
-                }
+                //component.getPostings(index, processor)
+                List<Posting> componentResults = new ArrayList(component.getPostings(index, processor));
+                //for (String s: processor.processToken(component.toString())) {
+                //    componentResults = unionMergePostings(component.getPostings(index, processor), componentResults);
+                //}
                 result = unionMergePostings(result, componentResults);
             }
                 

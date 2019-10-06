@@ -20,28 +20,22 @@ public class AndQuery implements QueryComponent {
 	
 	@Override
 	public List<Posting> getPostings(Index index, TokenProcessor processor) {
-            System.out.println("\u001B[31m" + "====== AndQuery.getPostings() ======" + "\u001B[0m");
-            System.out.println(mComponents.toString());
+            //System.out.println("\u001B[31m" + "====== AndQuery.getPostings() ======" + "\u001B[0m");
+            //System.out.println("\t" + mComponents.toString());
             
             List<Posting> result = new ArrayList();
-            //List<Posting> componentResultsA = new ArrayList();
-            //List<Posting> componentResultsB = new ArrayList();
             
             // For each component retrieved, merge results to one list of results
             // Only merge similar postings
+
+            //      First term to query gets added to results for union merge
+            //          Prevents Intersect merging with empty array
+            result = mComponents.get(0).getPostings(index, processor);
             
-            // First term to query gets added to results for union merge
-            for (String s: processor.processToken(mComponents.get(0).toString())) {
-                result = unionMergePostings(result, index.getPostings(s));
-            }
-            
-            // Now the rest of terms
+            // Now merge rest of component results
             for (int i = 1; i < mComponents.size(); i++) {
                 // Get all possible index results due to token processing
-                List<Posting> tempComponentResults = new ArrayList();
-                for (String s: processor.processToken(mComponents.get(i).toString())) {
-                    tempComponentResults = unionMergePostings(tempComponentResults, index.getPostings(s));
-                }
+                List<Posting> tempComponentResults = mComponents.get(i).getPostings(index, processor);
                 
                 result = intersectMergePostings(result, tempComponentResults);
             }

@@ -59,7 +59,7 @@ public class Oowa {
             BooleanQueryParser queryParser = new BooleanQueryParser();
             QueryComponent queryComponent = queryParser.parseQuery(query);
             // Default token processor
-            TokenProcessor tokenProcessor = new AdvancedTokenProcessor();
+            TokenProcessor tokenProcessor = new SimpleTokenProcessor();
             
             // TODO: remove try-catch once fixed
             try {

@@ -34,10 +34,9 @@ public class PhraseLiteral implements QueryComponent {
 	public List<Posting> getPostings(Index index, TokenProcessor processor) {
             // Override default processor
             //      No hyphen split/remove
-            processor = new SimpleTokenProcessor();
             
-            System.out.println("\u001B[31m" + "====== PhraseLiteral.getPostings() ======" + "\u001B[0m");
-            System.out.println(processor.processToken(mTerms.toString()));
+            //System.out.println("\u001B[31m" + "====== PhraseLiteral.getPostings() ======" + "\u001B[0m");
+            //System.out.println("\t" + processor.processToken(mTerms.toString()));
             
             List<Posting> result = new ArrayList();
             
@@ -54,13 +53,13 @@ public class PhraseLiteral implements QueryComponent {
                     tempComponentResults = unionMergePostings(tempComponentResults, index.getPostings(s));
                 }
                 
-                result = positionalIntersectMergePostings(result, tempComponentResults);
+                result = positionalIntersectMergePostings(result, tempComponentResults, i);
             }
             
             return result;
 	}
         
-        private List<Posting> positionalIntersectMergePostings(List<Posting> listA, List<Posting> listB) {
+        private List<Posting> positionalIntersectMergePostings(List<Posting> listA, List<Posting> listB, int queryPos) {
             List<Posting> listIntersect = new ArrayList(); // Placeholder List
             
             if (!listA.isEmpty() || !listB.isEmpty()) { // Neither list can be empty
@@ -70,37 +69,36 @@ public class PhraseLiteral implements QueryComponent {
                         i++;
                     } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
                         j++;
-                    } else { // Do Positional test here
+                    } else { 
+                        // Same doc 
+                        // Positional test
                         List<Integer> positionsA = listA.get(i).getPositions();
                         List<Integer> positionsB = listB.get(j).getPositions();
-                        System.out.println(listA.get(i).getDocumentId());
-                        System.out.println("\tk: " + positionsA.toString());
-                        System.out.println(listA.get(i).getDocumentId());
-                        System.out.println("\tl: " + positionsB.toString());
-                        System.out.println();
                         
                         int k = 0; // Pos A
                         int l = 0; // Pos B
                         
-                        while (k < positionsA.size() && l < positionsB.size()) {
-                            if ((positionsA.get(k) < positionsB.get(l))) {
-                                // First word behind second word
-                                if ((positionsB.get(l) - positionsA.get(k) == 1)) {
+                        while ((k < positionsA.size() && l < positionsB.size())) {
+                            if ((positionsA.get(k) <= positionsB.get(l))) { // could be same word
+                                // A behind B
+                                if (positionsB.get(l) - positionsA.get(k) == queryPos) {
                                     listIntersect.add(listA.get(i));
                                     break;
                                 } else {
                                     k++;
                                 }
-                            } else if (positionsA.get(k) > positionsB.get(l)) {
-                                // Second word behind first word
-                                if ((positionsA.get(k) - positionsB.get(l) == 1)) {
+                            } else if (positionsA.get(k) >= positionsB.get(l)) { // could be same word
+                                // B behind A
+                                if (positionsB.get(l) - positionsA.get(k) == queryPos) {
                                     listIntersect.add(listA.get(i));
                                     break;
                                 } else {
                                     l++;
                                 }
-                            } else {
-                                k++;
+                            } 
+                            else { // If it's same word, do ???
+                                // Move B, we only want to know if second list
+                                // has pos after first word.
                                 l++;
                             }
                         }

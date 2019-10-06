@@ -25,10 +25,9 @@ public class TermLiteral implements QueryComponent {
 	public List<Posting> getPostings(Index index, TokenProcessor processor) {
             // Override default processor
             //      No hyphen split/remove
-            processor = new SimpleTokenProcessor();
             
-            System.out.println("\u001B[31m" + "====== TermLiteral.getPostings() ======" + "\u001B[0m");
-            System.out.println(processor.processToken(mTerm));
+            //System.out.println("\u001B[31m" + "====== TermLiteral.getPostings() ======" + "\u001B[0m");
+            //System.out.println("\t" + processor.processToken(mTerm));
             
             List<Posting> result = new ArrayList();
             
