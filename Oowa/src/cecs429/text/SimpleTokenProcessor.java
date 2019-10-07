@@ -10,16 +10,13 @@ public class SimpleTokenProcessor implements TokenProcessor {
 
     @Override
     public List<String> processToken(String token) {
-        String _token = token;
         List<String> result = new ArrayList();
 
         // TODO:    remove non-alphanumeric characters from start & end of string
         //          (!He,llo. => He,llo) (192.186.1.1 => 192.186.1.1)
-        _token = removeNonAlphanum(_token);
-
         // TODO:    remove all apostrophies and quotation marks
-        _token = removeQuote(_token);
-        result.add(_token);
+        token = removeQuote(removeNonAlphanum(token));
+        result.add(token);
 
         // TODO:    to lowercase
         result = toLower(result);
@@ -49,51 +46,46 @@ public class SimpleTokenProcessor implements TokenProcessor {
         return list;
     }
 
-    private List<String> removeHyphen(String str) {
-        List<String> result = new ArrayList<>(Arrays.asList(str.split("-")));
-        if (result.size() != 1) {
-            result.add(str.replaceAll("-", ""));
-        }
-
-        return result;
-    }
-
     private String removeQuote(String str) {
-        String result = str;
-
-        return result.replaceAll("\'|\"", "");
+        return str.replaceAll("\'|\"|”", "");
     }
 
     private String removeNonAlphanum(String str) {
-        String result = str;
-
         // Iterate from left
         int stopLeft = 0;
-        for (int i = 0; i < result.length(); i++) {
+        for (int i = 0; i < str.length(); i++) {
             // stop once first alphanum character is found
-            if (Character.isLetter(result.charAt(i))
-                    || Character.isDigit(result.charAt(i))) {
+            if (Character.isLetter(str.charAt(i))
+                    || Character.isDigit(str.charAt(i))) {
                 break;
             } else {
                 stopLeft++;
             }
         }
-        result = result.substring(stopLeft);
+        
+        if (stopLeft < str.length()) {
+            str = str.substring(stopLeft);
+        }
+        
 
         // Iterate from right
         int stopRight = 0;
-        for (int i = result.length() - 1; i >= 0; i--) {
+        for (int i = str.length() - 1; i >= 0; i--) {
             // stop once first alphanum character is found
-            if (Character.isLetter(result.charAt(i))
-                    || Character.isDigit(result.charAt(i))) {
+            if (Character.isLetter(str.charAt(i))
+                    || Character.isDigit(str.charAt(i))) {
                 break;
             } else {
                 stopRight++;
             }
         }
-        result = result.substring(0, (result.length() - 1) - (stopRight - 1));
+        
+        if (stopRight < str.length()) {
+            str = str.substring(0, (str.length() - 1) - (stopRight - 1));
+        }
+        
 
-        return result;
+        return str;
     }
 
 }

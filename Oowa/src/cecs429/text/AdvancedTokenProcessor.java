@@ -14,10 +14,8 @@ public class AdvancedTokenProcessor implements TokenProcessor {
 
         // TODO:    remove non-alphanumeric characters from start & end of string
         //          (!He,llo. => He,llo) (192.186.1.1 => 192.186.1.1)
-        token = removeNonAlphanum(token);
-
         // TODO:    remove all apostrophies and quotation marks
-        token = removeQuote(token);
+        token = removeQuote(removeNonAlphanum(token));
 
         // TODO:    if hyphenated: split AND remove hyphens (turn to single word)
         result = removeHyphen(token);
@@ -54,20 +52,19 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         List<String> result = new ArrayList<>(Arrays.asList(str.split("-")));
         if (result.size() != 1) {
             result.add(str.replaceAll("-", ""));
-        }
+            for (int i = 0; i < result.size(); i++) {
+                result.set(i, removeNonAlphanum(result.get(i)));
+            }
+        } 
 
         return result;
     }
 
     private String removeQuote(String str) {
-
-        return str.replaceAll("\'|\"", "");
-
+        return str.replaceAll("\'|\"|”", "");
     }
 
     private String removeNonAlphanum(String str) {
-        //String result = str;
-
         // Iterate from left
         int stopLeft = 0;
         for (int i = 0; i < str.length(); i++) {
@@ -79,7 +76,11 @@ public class AdvancedTokenProcessor implements TokenProcessor {
                 stopLeft++;
             }
         }
-        str = str.substring(stopLeft);
+        
+        if (stopLeft < str.length()) {
+            str = str.substring(stopLeft);
+        }
+        
 
         // Iterate from right
         int stopRight = 0;
@@ -92,7 +93,11 @@ public class AdvancedTokenProcessor implements TokenProcessor {
                 stopRight++;
             }
         }
-        str = str.substring(0, (str.length() - 1) - (stopRight - 1));
+        
+        if (stopRight < str.length()) {
+            str = str.substring(0, (str.length() - 1) - (stopRight - 1));
+        }
+        
 
         return str;
     }

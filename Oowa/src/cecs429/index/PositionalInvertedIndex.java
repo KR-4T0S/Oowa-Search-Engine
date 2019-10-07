@@ -32,6 +32,7 @@ public class PositionalInvertedIndex implements Index {
             result = new ArrayList<>(mIndex.get(term));
             return result;  // Returns term if it's indexed.
         }
+        
         return result = new ArrayList<>(); // Returns empty list otherwise
     }
 
@@ -55,8 +56,6 @@ public class PositionalInvertedIndex implements Index {
                 mIndex.get(term).getLast().addPos(pos);
             }
         }
-        //System.out.println("\tDocument : " + documentId + "\t| Term: " + term + "\t| Position: " + pos);
-        //System.out.println("\t\tPositions: " + mIndex.get(term).getLast().getPositions().toString());
     }
 
     @Override

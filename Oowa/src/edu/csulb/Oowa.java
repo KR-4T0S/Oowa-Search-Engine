@@ -14,7 +14,11 @@ import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
 public class Oowa {
-
+    
+    // Integer Constants
+    public static final int MAX_VOCAB = 1000;
+    
+    // String Constants
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLACK = "\u001B[30m";
     public static final String ANSI_RED = "\u001B[31m";
@@ -32,8 +36,6 @@ public class Oowa {
         String query, directory;
         Scanner inputQuery = new Scanner(System.in);
         Scanner inputDirectory = new Scanner(System.in);
-        String choiceCommand = "";
-        String choiceParameter = "";
 
         // Prompt for directory
         System.out.print("Enter directory: ");
@@ -54,37 +56,36 @@ public class Oowa {
                     + ANSI_BOLD + "directoryname" + ANSI_RESET + " → Index new directory] ");
             System.out.print("[" + ANSI_RED + ":vocab " + ANSI_RESET
                     + " → View vocab (first 1000)] ");
+            
             // Start prompt for word
             System.out.print("\nSearch:\t");
             query = inputQuery.nextLine();
             System.out.println();
 
+            String choiceCommand = "";
+            String choiceParameter = "";
             // Detect if it's command
             if (query.charAt(0) == ':' && !query.equals(":q")) {
-                choiceCommand = query.substring(0, query.indexOf(' '));
+                if (query.indexOf(' ') >= 0) {
+                    choiceCommand = query.substring(0, query.indexOf(' '));
+                } else {
+                    choiceCommand = query;
+                }
             }
 
             if (!query.equals(":q")) {
-                switch (choiceCommand) {
-                    case ":stem":
-                        choiceParameter = query.substring(query.indexOf(' ') + 1);
-                       //System.out.println(ANSI_RED + "====== Stemming ======" + ANSI_RESET);
-                        System.out.println("\tOriginal: " + choiceParameter);
-                        System.out.println("\tStemmed: " + stemmer(choiceParameter) + "\n");
-                        break;
-                    case ":index":
-                        choiceParameter = query.substring(query.indexOf(' ') + 1);
-                        //System.out.println(ANSI_RED + "====== Indexing ======" + ANSI_RESET);
-                        corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
-                        index = startIndex(corpus);
-                        break;
-                    case ":vocab":
-                        System.out.println(ANSI_RED + "====== Vocab ======" + ANSI_RESET);
-                        printVocab(index);
-                        break;
-                    default:
-                        //System.out.println(ANSI_RED + "====== Search ======" + ANSI_RESET);
-                        getResults(query, index, corpus);
+                if (choiceCommand.equals(":stem")) {
+                    choiceParameter = query.substring(query.indexOf(' ') + 1);
+                    System.out.println("\tOriginal: " + choiceParameter);
+                    System.out.println("\tStemmed: " + stemmer(choiceParameter) + "\n");
+                } else if (choiceCommand.equals(":index")) {
+                    choiceParameter = query.substring(query.indexOf(' ') + 1);
+                    corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
+                    index = startIndex(corpus);
+                } else if (choiceCommand.equals(":vocab")) {
+                    printVocab(index);
+                } else {
+                    getResults(query, index, corpus);
                 }
             }
         } while (!query.equals(":q"));
@@ -182,11 +183,10 @@ public class Oowa {
             EnglishTokenStream stream = new EnglishTokenStream(d.getContent());
             Iterable<String> tokens = stream.getTokens();
 
-            //System.out.println("\tTitle: " + d.getTitle() + " \t| ID: " + d.getId());
             for (String s : tokens) {
-                //vocabulary.add(processor.processToken(s));
-                currentPosition++;
+                //System.out.println("\t Term: " + processor.processToken(s) + " | " + d.getId());
                 invertedIndex.addTerm(processor.processToken(s), d.getId(), currentPosition);
+                currentPosition++;
             }
         }
 
@@ -205,9 +205,14 @@ public class Oowa {
     private static void printVocab(Index index) {
         List<String> vocab = index.getVocabulary();
         System.out.println("Vocabulary: ");
-        for (int i = 0; i < 100; i++) {
-            System.out.println("\t" + i + ": \t" + vocab.get(i));
+        int i = 0;
+        while (i < vocab.size() && i < MAX_VOCAB) {
+            System.out.println("\t" + (i+1) + ": \t" + vocab.get(i));
+            i++;
         }
+//        for (int i = 0; i < 1000; i++) {
+//            System.out.println("\t" + (i+1) + ": \t" + vocab.get(i));
+//        }
         System.out.println("\nTotal Vocabulary: " + vocab.size() + "\n");
     }
 }
