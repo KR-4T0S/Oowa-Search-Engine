@@ -44,8 +44,6 @@ public class Oowa {
         Index index = startIndex(corpus);
 
         // Init menu 
-        System.out.println("\n===== Simple Search Engine =====\n");
-
         do {
             System.out.print("[" + ANSI_RED + ":q " + ANSI_RESET + " → Quits Program] ");
             System.out.print("[" + ANSI_RED + ":stem " + ANSI_RESET
@@ -143,7 +141,7 @@ public class Oowa {
                     // Read reader stream
                     int charCounter = 0;
                     while ((intValueOfChar = reader.read()) != -1) {
-                        if (charCounter >= 100 && ((char) intValueOfChar) == ' ') {
+                        if ((charCounter >= 100 && ((char) intValueOfChar) == ' ')) {
                             intValueOfChar = 10;
                             charCounter = 0;
                         }

@@ -48,19 +48,22 @@ public class PhraseLiteral implements QueryComponent {
         }
 
         // Now the rest of terms
-        for (int i = 1; i < mTerms.size(); i++) {
-            // Get all possible index results due to token processing
-            List<Posting> tempComponentResults = new ArrayList();
-            for (String s : processor.processToken(mTerms.get(i))) {
-                tempComponentResults = unionMergePostings(tempComponentResults, index.getPostings(s));
+        if (mTerms.size() > 1) {
+            for (int i = 1; i < mTerms.size(); i++) {
+                // Get all possible index results due to token processing
+                List<Posting> tempComponentResults = new ArrayList();
+                for (String s : processor.processToken(mTerms.get(i))) {
+                    tempComponentResults = unionMergePostings(tempComponentResults, index.getPostings(s));
+                }
+                
+                result = positionalIntersectMergePostings(result, tempComponentResults, i);
             }
-
-            result = positionalIntersectMergePostings(result, tempComponentResults, i);
         }
 
         return result;
     }
 
+    
     private List<Posting> positionalIntersectMergePostings(List<Posting> listA, List<Posting> listB, int queryPos) {
         List<Posting> listIntersect = new ArrayList(); // Placeholder List
 
@@ -79,7 +82,7 @@ public class PhraseLiteral implements QueryComponent {
 
                     int k = 0; // Pos A
                     int l = 0; // Pos B
-
+                    // [to, be, or, not, to, be]
                     while ((k < positionsA.size() && l < positionsB.size())) {
                         if ((positionsA.get(k) <= positionsB.get(l))) { // could be same word
                             // A behind B
@@ -87,22 +90,18 @@ public class PhraseLiteral implements QueryComponent {
                                 listIntersect.add(listA.get(i));
                                 break;
                             } else {
-                                k++;
-                            }
-                        } else if (positionsA.get(k) >= positionsB.get(l)) { // could be same word
-                            // B behind A
-                            if (positionsB.get(l) - positionsA.get(k) == queryPos) {
-                                listIntersect.add(listA.get(i));
-                                break;
-                            } else {
                                 l++;
                             }
+                        } else if (positionsA.get(k) > positionsB.get(l)) { // could be same word
+                            l++;
                         } else { // If it's same word, do ???
                             // Move B, we only want to know if second list
                             // has pos after first word.
                             l++;
                         }
                     }
+                    
+                    // Next Doc
                     i++;
                     j++;
                 }
