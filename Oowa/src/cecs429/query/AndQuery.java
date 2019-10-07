@@ -50,20 +50,16 @@ public class AndQuery implements QueryComponent {
                 }
             }
             
-            System.out.print("NEGATIVES: [");
-            for (Posting p: negatives) {
-                System.out.print(p.getDocumentId()  + " ");
-            }
-            System.out.print("]\n");
-            
-            System.out.print("POSITIVES: [");
-            for (Posting p: positives) {
-                System.out.print(p.getDocumentId() + " ");
-            }
-            System.out.print("]\n");
-            
             // Next component
             i++;
+        }
+        
+        // Now we have full collection of positives and negatives
+        // NOT AND merge them together
+        if (!negatives.isEmpty()) { // We have NOT queries
+            result = notIntersectMergePostings(positives, negatives);
+        } else {
+            result = positives;
         }
         
         return result;
@@ -114,15 +110,6 @@ public class AndQuery implements QueryComponent {
                 }
             }
         }
-        
-       
-
-        System.out.println("===");
-        System.out.print("[");
-        for (Posting p: result) {
-            System.out.print(p.getDocumentId() + " ");
-        }
-        System.out.print("]\n");
         
         return result;
     }
