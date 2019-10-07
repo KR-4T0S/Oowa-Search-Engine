@@ -142,44 +142,53 @@ public class BooleanQueryParser {
     private Literal findNextLiteral(String subquery, int startIndex) {
         int subLength = subquery.length();
         int lengthOut;
-
+            
         // Skip past white space.
         while (subquery.charAt(startIndex) == ' ') {
-            ++startIndex;
+            startIndex++;
         }
 
-        if (subquery.charAt(startIndex) == '\"') {
-            // start of phrase literal
-            startIndex++;
-            int nextQuote = subquery.indexOf('\"', startIndex);
-
-            if (nextQuote < 0) {
-                lengthOut = subLength - startIndex;
-            } else {
-                lengthOut = nextQuote - startIndex;
-            }
-
-            // Splits the phrase into tokens separated by spaces
-            List terms = Arrays.asList(subquery.substring(startIndex, startIndex + lengthOut).split("\\s+"));
-            // This is a phrase term literal containing a multiple terms.
-            return new Literal(
-                    new StringBounds(startIndex + 1, lengthOut + 1),
-                    new PhraseLiteral(terms));
-        } else {
-            // Locate the next space to find the end of this literal.
-            int nextSpace = subquery.indexOf(' ', startIndex);
-
-            if (nextSpace < 0) {
-                // No more literals in this subquery.
-                lengthOut = subLength - startIndex;
-            } else {
-                lengthOut = nextSpace - startIndex;
-            }
-
-            // This is a term literal containing a single term.
-            return new Literal(
-                    new StringBounds(startIndex, lengthOut),
-                    new TermLiteral(subquery.substring(startIndex, startIndex + lengthOut)));
+        switch (subquery.charAt(startIndex)) {
+            case '-':
+                // Skip past -
+                startIndex++;
+                
+//                return  findNextLiteral(subquery, startIndex);
+                return new Literal(
+                        findNextLiteral(subquery, startIndex).bounds,
+                        new NotQuery( findNextLiteral(subquery, startIndex).literalComponent) );
+            case '\"':
+                // start of phrase literal
+                startIndex++;
+                int nextQuote = subquery.indexOf('\"', startIndex);
+                
+                if (nextQuote < 0) {
+                    lengthOut = subLength - startIndex;
+                } else {
+                    lengthOut = nextQuote - startIndex;
+                }
+                
+                // Splits the phrase into tokens separated by spaces
+                List terms = Arrays.asList(subquery.substring(startIndex, startIndex + lengthOut).split("\\s+"));
+                // This is a phrase term literal containing a multiple terms.
+                return new Literal(
+                        new StringBounds(startIndex + 1, lengthOut + 1),
+                        new PhraseLiteral(terms, true));
+            default:
+                // Locate the next space to find the end of this literal.
+                int nextSpace = subquery.indexOf(' ', startIndex);
+                
+                if (nextSpace < 0) {
+                    // No more literals in this subquery.
+                    lengthOut = subLength - startIndex;
+                } else {
+                    lengthOut = nextSpace - startIndex;
+                }
+                
+                // This is a term literal containing a single term.
+                return new Literal(
+                        new StringBounds(startIndex, lengthOut),
+                        new TermLiteral(subquery.substring(startIndex, startIndex + lengthOut), true));
         }
     }
 }

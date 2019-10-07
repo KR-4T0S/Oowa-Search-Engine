@@ -40,6 +40,8 @@ public class Oowa {
         directory = inputDirectory.nextLine();
 
         // Load corpus
+        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
+        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
         DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
         Index index = startIndex(corpus);
 
@@ -59,19 +61,20 @@ public class Oowa {
 
             // Detect if it's command
             if (query.charAt(0) == ':' && !query.equals(":q")) {
-                choiceCommand = query.split("\\s+")[0];
+                choiceCommand = query.substring(0, query.indexOf(' '));
             }
 
             if (!query.equals(":q")) {
                 switch (choiceCommand) {
                     case ":stem":
-                        choiceParameter = query.split("\\s+")[1];
-                        System.out.println(ANSI_RED + "====== Stemming ======" + ANSI_RESET);
-                        System.out.println("Stemmed: " + stemmer(choiceParameter) + "\n");
+                        choiceParameter = query.substring(query.indexOf(' ') + 1);
+                       //System.out.println(ANSI_RED + "====== Stemming ======" + ANSI_RESET);
+                        System.out.println("\tOriginal: " + choiceParameter);
+                        System.out.println("\tStemmed: " + stemmer(choiceParameter) + "\n");
                         break;
                     case ":index":
-                        choiceParameter = query.split("\\s+")[1];
-                        System.out.println(ANSI_RED + "====== Indexing ======" + ANSI_RESET);
+                        choiceParameter = query.substring(query.indexOf(' ') + 1);
+                        //System.out.println(ANSI_RED + "====== Indexing ======" + ANSI_RESET);
                         corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
                         index = startIndex(corpus);
                         break;
@@ -80,7 +83,7 @@ public class Oowa {
                         printVocab(index);
                         break;
                     default:
-                        System.out.println(ANSI_RED + "====== Search ======" + ANSI_RESET);
+                        //System.out.println(ANSI_RED + "====== Search ======" + ANSI_RESET);
                         getResults(query, index, corpus);
                 }
             }
@@ -121,7 +124,7 @@ public class Oowa {
                 int counter = 0;
                 for (Posting p : results) {
                     counter++;
-                    System.out.println("\t" + counter + ": [ID:" + p.getDocumentId() + "] " + corpus.getDocument(p.getDocumentId()).getTitle());
+                    System.out.println("\t[ID:" + p.getDocumentId() + "] " + corpus.getDocument(p.getDocumentId()).getTitle());
                 }
 
                 System.out.println("\nTotal Results: " + counter + "\n\n");
@@ -205,6 +208,6 @@ public class Oowa {
         for (int i = 0; i < 100; i++) {
             System.out.println("\t" + i + ": \t" + vocab.get(i));
         }
-        System.out.println("\nTotal Vocabulary: " + vocab.size());
+        System.out.println("\nTotal Vocabulary: " + vocab.size() + "\n");
     }
 }

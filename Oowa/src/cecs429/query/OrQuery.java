@@ -30,11 +30,7 @@ public class OrQuery implements QueryComponent {
         // For each component retrieved, merge results to one list of results
         // Only merge if postings does not already exist
         for (QueryComponent component : mComponents) {
-            //component.getPostings(index, processor)
             List<Posting> componentResults = new ArrayList(component.getPostings(index, processor));
-            //for (String s: processor.processToken(component.toString())) {
-            //    componentResults = unionMergePostings(component.getPostings(index, processor), componentResults);
-            //}
             result = unionMergePostings(result, componentResults);
         }
 
@@ -42,23 +38,23 @@ public class OrQuery implements QueryComponent {
     }
 
     private List<Posting> unionMergePostings(List<Posting> listA, List<Posting> listB) {
-        List<Posting> listUnion = new ArrayList(); // Placeholder List
+        List<Posting> result = new ArrayList(); // Placeholder List
 
         if (listA.isEmpty()) { // no need for merge algorithm
-            listUnion.addAll(listB);
+            result.addAll(listB);
         } else if (listB.isEmpty()) {
-            listUnion.addAll(listA);
+            result.addAll(listA);
         } else { // Union merge algorithm
             int i = 0, j = 0;
             while (i < listA.size() && j < listB.size()) {
-                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) {
-                    listUnion.add(listA.get(i));
+                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) { // Lowest of all elements is in A
+                    result.add(listA.get(i));
                     i++;
-                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
-                    listUnion.add(listB.get(j));
+                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) { // Lowest of all elements is in B
+                    result.add(listB.get(j));
                     j++;
-                } else {
-                    listUnion.add(listA.get(i));
+                } else { // Both elements have lowest
+                    result.add(listA.get(i));
                     i++;
                     j++;
                 }
@@ -67,19 +63,27 @@ public class OrQuery implements QueryComponent {
             // Now add the remaining components of the larger array.
             // Add rest of items of component results
             while (i < listA.size()) {
-                listUnion.add(listA.get(i));
+                result.add(listA.get(i));
                 i++;
             }
             // Add rest of items of component results
             while (j < listB.size()) {
-                listUnion.add(listB.get(j));
+                result.add(listB.get(j));
                 j++;
             }
         }
 
-        return listUnion;
+        return result;
     }
 
+    public void setPositive(boolean value) {
+        // null
+    }
+    
+    public boolean isPositive() {
+        return true;
+    }
+    
     @Override
     public String toString() {
         // Returns a string of the form "[SUBQUERY] + [SUBQUERY] + [SUBQUERY]"

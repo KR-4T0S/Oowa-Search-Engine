@@ -13,9 +13,11 @@ import java.util.List;
 public class TermLiteral implements QueryComponent {
 
     private String mTerm;
+    private boolean mIsPositive;
 
-    public TermLiteral(String term) {
+    public TermLiteral(String term, boolean isPositive) {
         mTerm = term;
+        mIsPositive = isPositive;
     }
 
     public String getTerm() {
@@ -24,11 +26,6 @@ public class TermLiteral implements QueryComponent {
 
     @Override
     public List<Posting> getPostings(Index index, TokenProcessor processor) {
-        // Override default processor
-        //      No hyphen split/remove
-
-        //System.out.println("\u001B[31m" + "====== TermLiteral.getPostings() ======" + "\u001B[0m");
-        //System.out.println("\t" + processor.processToken(mTerm));
         List<Posting> result = new ArrayList();
 
         for (String s : processor.processToken(mTerm)) {
@@ -39,23 +36,23 @@ public class TermLiteral implements QueryComponent {
     }
 
     private List<Posting> unionMergePostings(List<Posting> listA, List<Posting> listB) {
-        List<Posting> listUnion = new ArrayList(); // Placeholder List
+        List<Posting> result = new ArrayList(); // Placeholder List
 
         if (listA.isEmpty()) { // no need for merge algorithm
-            listUnion.addAll(listB);
+            result.addAll(listB);
         } else if (listB.isEmpty()) {
-            listUnion.addAll(listA);
+            result.addAll(listA);
         } else { // Union merge algorithm
             int i = 0, j = 0;
             while (i < listA.size() && j < listB.size()) {
                 if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) {
-                    listUnion.add(listA.get(i));
+                    result.add(listA.get(i));
                     i++;
                 } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
-                    listUnion.add(listB.get(j));
+                    result.add(listB.get(j));
                     j++;
                 } else {
-                    listUnion.add(listA.get(i));
+                    result.add(listA.get(i));
                     i++;
                     j++;
                 }
@@ -64,19 +61,27 @@ public class TermLiteral implements QueryComponent {
             // Now add the remaining components of the larger array.
             // Add rest of items of component results
             while (i < listA.size()) {
-                listUnion.add(listA.get(i));
+                result.add(listA.get(i));
                 i++;
             }
             // Add rest of items of component results
             while (j < listB.size()) {
-                listUnion.add(listB.get(j));
+                result.add(listB.get(j));
                 j++;
             }
         }
 
-        return listUnion;
+        return result;
     }
 
+    public void setPositive(boolean value) {
+        mIsPositive = value;
+    }
+    
+    public boolean isPositive() {
+        return mIsPositive;
+    }
+    
     @Override
     public String toString() {
         return mTerm;

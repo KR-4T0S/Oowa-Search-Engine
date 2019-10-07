@@ -22,67 +22,122 @@ public class AndQuery implements QueryComponent {
 
     @Override
     public List<Posting> getPostings(Index index, TokenProcessor processor) {
-        //System.out.println("\u001B[31m" + "====== AndQuery.getPostings() ======" + "\u001B[0m");
-        //System.out.println("\t" + mComponents.toString());
-
         List<Posting> result = new ArrayList();
+        
+        boolean firstPos = false;
+        int i = 0;
+        List<Posting> nots = new ArrayList(); // Temporary list of IDs to remove
+        while (i < mComponents.size()) {
+            QueryComponent tempComp = mComponents.get(i);
+            
+            // Until we find the first positive, we want to keep track of all docs to remove
+            // Once we have an actual positive, we just want to get difference.
+            if (firstPos) { // we had found our first positive
+                if (tempComp.isPositive() == true) { // this is positive, just AND merge
+                    result = intersectMergePostings(result, tempComp.getPostings(index, processor));
+                } else { // not positive, NOT AND merge
+                    // Do regular AND NOT merge
+                    result = notIntersectMergePostings(result, tempComp.getPostings(index, processor));
+                }
+            } else { // we haven't found a positive yet
+                if (tempComp.isPositive() == true) { // our first positive
+                    
+                    if (i == 0) { // first positive is first component
+                        result = tempComp.getPostings(index, processor);
+                    } else { // first positive is not first component
+                        result = notIntersectMergePostings(tempComp.getPostings(index, processor), nots);
+                    }
+                    
+                    firstPos = true; // toggle flag
+                } else { // still on negatives
+                    // Collect all unique IDs to remove
+                    nots = unionMergePostings(nots, tempComp.getPostings(index, processor));
+                }
+            }
+            
+            // Next component
+            i++;
+        }
+        
+        return result;
+    }
 
-        // For each component retrieved, merge results to one list of results
-        // Only merge similar postings
-        //      First term to query gets added to results for union merge
-        //          Prevents Intersect merging with empty array
-        result = mComponents.get(0).getPostings(index, processor);
-
-        // Now merge rest of component results
-        for (int i = 1; i < mComponents.size(); i++) {
-            // Get all possible index results due to token processing
-            List<Posting> tempComponentResults = mComponents.get(i).getPostings(index, processor);
-
-            result = intersectMergePostings(result, tempComponentResults);
+    private List<Posting> notIntersectMergePostings(List<Posting> listA, List<Posting> listB) {
+        List<Posting> result = new ArrayList(); // Placeholder List
+        
+        if (!listA.isEmpty() || !listB.isEmpty()) { // Neither list can be empty
+            int i = 0, j = 0;
+            while (i < listA.size() && j < listB.size()) {
+                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) { // List A has element not in B
+                    result.add(listA.get(i));
+                    i++;
+                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) { // List B has element not in A
+                    j++;
+                } else {
+                    i++;
+                    j++;
+                }
+            }
+            
+            // Now add the remaining components of the larger array.
+            // Add rest of items of component results
+            while (i < listA.size()) {
+                result.add(listA.get(i));
+                i++;
+            }
         }
 
         return result;
     }
-
+    
     private List<Posting> intersectMergePostings(List<Posting> listA, List<Posting> listB) {
-        List<Posting> listIntersect = new ArrayList(); // Placeholder List
+        List<Posting> result = new ArrayList(); // Placeholder List
 
-        if (!listA.isEmpty() || !listB.isEmpty()) { // Neither list can be empty
+        if (!listA.isEmpty()) {
             int i = 0, j = 0;
             while (i < listA.size() && j < listB.size()) {
-                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) {
+                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) { // Lowest element in A is not in B
                     i++;
-                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
+                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) { // Lowest element in B is not in A
                     j++;
-                } else {
-                    listIntersect.add(listA.get(i));
+                } else { // Elements match
+                    result.add(listA.get(i));
                     i++;
                     j++;
                 }
             }
         }
+        
+       
 
-        return listIntersect;
+        System.out.println("===");
+        System.out.print("[");
+        for (Posting p: result) {
+            System.out.print(p.getDocumentId() + " ");
+        }
+        System.out.print("]\n");
+        
+        return result;
     }
 
     private List<Posting> unionMergePostings(List<Posting> listA, List<Posting> listB) {
-        List<Posting> listUnion = new ArrayList(); // Placeholder List
+        List<Posting> result = new ArrayList(); // Placeholder List
 
         if (listA.isEmpty()) { // no need for merge algorithm
-            listUnion.addAll(listB);
+            result.addAll(listB);
         } else if (listB.isEmpty()) {
-            listUnion.addAll(listA);
+            result.addAll(listA);
         } else { // Union merge algorithm
             int i = 0, j = 0;
             while (i < listA.size() && j < listB.size()) {
-                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) {
-                    listUnion.add(listA.get(i));
+                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) { // Lowest of all elements is in A
+                    result.add(listA.get(i));
                     i++;
-                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
-                    listUnion.add(listB.get(j));
+                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) { // Lowest of all elements is in B
+                    result.add(listB.get(j));
                     j++;
-                } else {
-                    listUnion.add(listA.get(i));
+                } else { // Both elements have lowest
+                    result.add(listA.get(i));
                     i++;
                     j++;
                 }
@@ -91,17 +146,25 @@ public class AndQuery implements QueryComponent {
             // Now add the remaining components of the larger array.
             // Add rest of items of component results
             while (i < listA.size()) {
-                listUnion.add(listA.get(i));
+                result.add(listA.get(i));
                 i++;
             }
             // Add rest of items of component results
             while (j < listB.size()) {
-                listUnion.add(listB.get(j));
+                result.add(listB.get(j));
                 j++;
             }
         }
 
-        return listUnion;
+        return result;
+    }
+    
+    public void setPositive(boolean value) {
+        // null
+    }
+    
+    public boolean isPositive() {
+        return true;
     }
 
     @Override

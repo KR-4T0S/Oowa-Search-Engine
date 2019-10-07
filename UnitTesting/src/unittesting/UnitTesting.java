@@ -12,7 +12,7 @@ public class UnitTesting {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-       System.out.println((int)'\n');
+        
     }
     
     public static String stemmer(String str) {

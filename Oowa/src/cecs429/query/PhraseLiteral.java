@@ -3,7 +3,6 @@ package cecs429.query;
 import cecs429.index.Index;
 import cecs429.index.Posting;
 import cecs429.text.*;
-import static java.lang.Math.abs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,14 +14,16 @@ import java.util.List;
  */
 public class PhraseLiteral implements QueryComponent {
 
-    // The list of individual terms in the phrase.
-    private List<String> mTerms = new ArrayList<>();
 
+    private List<String> mTerms = new ArrayList<>();
+    private boolean mIsPositive;
+    
     /**
      * Constructs a PhraseLiteral with the given individual phrase terms.
      */
-    public PhraseLiteral(List<String> terms) {
+    public PhraseLiteral(List<String> terms, boolean isPositive) {
         mTerms.addAll(terms);
+        mIsPositive = isPositive;
     }
 
     /**
@@ -35,11 +36,6 @@ public class PhraseLiteral implements QueryComponent {
 
     @Override
     public List<Posting> getPostings(Index index, TokenProcessor processor) {
-        // Override default processor
-        //      No hyphen split/remove
-
-        //System.out.println("\u001B[31m" + "====== PhraseLiteral.getPostings() ======" + "\u001B[0m");
-        //System.out.println("\t" + processor.processToken(mTerms.toString()));
         List<Posting> result = new ArrayList();
 
         // First term to query gets added to results for union merge
@@ -65,7 +61,7 @@ public class PhraseLiteral implements QueryComponent {
 
     
     private List<Posting> positionalIntersectMergePostings(List<Posting> listA, List<Posting> listB, int queryPos) {
-        List<Posting> listIntersect = new ArrayList(); // Placeholder List
+        List<Posting> result = new ArrayList(); // Placeholder List
 
         if (!listA.isEmpty() || !listB.isEmpty()) { // Neither list can be empty
             int i = 0, j = 0;
@@ -87,7 +83,7 @@ public class PhraseLiteral implements QueryComponent {
                         if ((positionsA.get(k) <= positionsB.get(l))) { // could be same word
                             // A behind B
                             if (positionsB.get(l) - positionsA.get(k) == queryPos) {
-                                listIntersect.add(listA.get(i));
+                                result.add(listA.get(i));
                                 break;
                             } else {
                                 l++;
@@ -108,27 +104,27 @@ public class PhraseLiteral implements QueryComponent {
             }
         }
 
-        return listIntersect;
+        return result;
     }
 
     private List<Posting> unionMergePostings(List<Posting> listA, List<Posting> listB) {
-        List<Posting> listUnion = new ArrayList(); // Placeholder List
+        List<Posting> result = new ArrayList(); // Placeholder List
 
         if (listA.isEmpty()) { // no need for merge algorithm
-            listUnion.addAll(listB);
+            result.addAll(listB);
         } else if (listB.isEmpty()) {
-            listUnion.addAll(listA);
+            result.addAll(listA);
         } else { // Union merge algorithm
             int i = 0, j = 0;
             while (i < listA.size() && j < listB.size()) {
                 if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) {
-                    listUnion.add(listA.get(i));
+                    result.add(listA.get(i));
                     i++;
                 } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
-                    listUnion.add(listB.get(j));
+                    result.add(listB.get(j));
                     j++;
                 } else {
-                    listUnion.add(listA.get(i));
+                    result.add(listA.get(i));
                     i++;
                     j++;
                 }
@@ -137,19 +133,27 @@ public class PhraseLiteral implements QueryComponent {
             // Now add the remaining components of the larger array.
             // Add rest of items of component results
             while (i < listA.size()) {
-                listUnion.add(listA.get(i));
+                result.add(listA.get(i));
                 i++;
             }
             // Add rest of items of component results
             while (j < listB.size()) {
-                listUnion.add(listB.get(j));
+                result.add(listB.get(j));
                 j++;
             }
         }
 
-        return listUnion;
+        return result;
+    }
+    
+    public void setPositive(boolean value) {
+        mIsPositive = value;
     }
 
+    public boolean isPositive() {
+        return mIsPositive;
+    }
+    
     @Override
     public String toString() {
         return "\"" + String.join(" ", mTerms) + "\"";

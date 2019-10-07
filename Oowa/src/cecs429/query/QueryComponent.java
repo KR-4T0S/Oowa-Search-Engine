@@ -17,4 +17,8 @@ public interface QueryComponent {
      * the source.
      */
     List<Posting> getPostings(Index index, TokenProcessor processor);
+    
+    void setPositive(boolean value);
+    
+    boolean isPositive();
 }
