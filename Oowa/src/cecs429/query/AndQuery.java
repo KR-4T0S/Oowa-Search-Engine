@@ -50,54 +50,21 @@ public class AndQuery implements QueryComponent {
                 }
             }
             
+            System.out.print("NEGATIVES: [");
+            for (Posting p: negatives) {
+                System.out.print(p.getDocumentId()  + " ");
+            }
+            System.out.print("]\n");
+            
+            System.out.print("POSITIVES: [");
+            for (Posting p: positives) {
+                System.out.print(p.getDocumentId() + " ");
+            }
+            System.out.print("]\n");
+            
             // Next component
             i++;
         }
-        
-        // Now we have full collection of positives and negatives
-        // NOT AND merge them together
-        if (!negatives.isEmpty()) { // We have NOT queries
-            System.out.println("We have NOT queries");
-            result = notIntersectMergePostings(result, negatives);
-        } else {
-            System.out.println("We DONT have NOT queries");
-            result = positives;
-        }
-        
-//        boolean firstPos = false;
-//        int i = 0;
-//        List<Posting> nots = new ArrayList(); // Temporary list of IDs to remove
-//        while (i < mComponents.size()) {
-//            QueryComponent tempComp = mComponents.get(i);
-//            
-//            // Until we find the first positive, we want to keep track of all docs to remove
-//            // Once we have an actual positive, we just want to get difference.
-//            if (firstPos) { // we had found our first positive
-//                if (tempComp.isPositive() == true) { // this is positive, just AND merge
-//                    result = intersectMergePostings(result, tempComp.getPostings(index, processor));
-//                } else { // not positive, NOT AND merge
-//                    // Do regular AND NOT merge
-//                    result = notIntersectMergePostings(result, tempComp.getPostings(index, processor));
-//                }
-//            } else { // we haven't found a positive yet
-//                if (tempComp.isPositive() == true) { // our first positive
-//                    
-//                    if (i == 0) { // first positive is first component
-//                        result = tempComp.getPostings(index, processor);
-//                    } else { // first positive is not first component
-//                        result = notIntersectMergePostings(tempComp.getPostings(index, processor), nots);
-//                    }
-//                    
-//                    firstPos = true; // toggle flag
-//                } else { // still on negatives
-//                    // Collect all unique IDs to remove
-//                    nots = unionMergePostings(nots, tempComp.getPostings(index, processor));
-//                }
-//            }
-//            
-//            // Next component
-//            i++;
-//        }
         
         return result;
     }
