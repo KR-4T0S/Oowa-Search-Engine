@@ -64,7 +64,8 @@ public class TermLiteral implements QueryComponent {
                 result.add(listA.get(i));
                 i++;
             }
-            // Add rest of items of component results
+            
+            // Add remaining results if listB is larger
             while (j < listB.size()) {
                 result.add(listB.get(j));
                 j++;

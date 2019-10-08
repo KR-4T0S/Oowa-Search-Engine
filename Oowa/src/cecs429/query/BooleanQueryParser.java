@@ -153,10 +153,11 @@ public class BooleanQueryParser {
                 // Skip past -
                 startIndex++;
                 
-//                return  findNextLiteral(subquery, startIndex);
-                return new Literal(
-                        findNextLiteral(subquery, startIndex).bounds,
-                        new NotQuery( findNextLiteral(subquery, startIndex).literalComponent) );
+                // We dont want multiple recursiongs
+                Literal result = findNextLiteral(subquery, startIndex);
+                
+                return new Literal(result.bounds,
+                    new NotQuery(result.literalComponent));
             case '\"':
                 // start of phrase literal
                 startIndex++;
