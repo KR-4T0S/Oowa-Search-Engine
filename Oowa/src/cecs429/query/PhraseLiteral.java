@@ -62,48 +62,6 @@ public class PhraseLiteral implements QueryComponent {
     }
 
     
-    private List<Posting> positionalIntersectMergePostingsv2(List<Posting> listA, List<Posting> listB, int indexOfA, int indexOfB) {
-        List<Posting> result = new ArrayList(); // Placeholder List
-
-        if (!listA.isEmpty() || !listB.isEmpty()) { // Neither list can be empty
-            int i = 0, j = 0;
-            while (i < listA.size() && j < listB.size()) {
-                if (listA.get(i).getDocumentId() < listB.get(j).getDocumentId()) {
-                    i++;
-                } else if (listA.get(i).getDocumentId() > listB.get(j).getDocumentId()) {
-                    j++;
-                } else {
-                    // Same doc 
-                    // Positional test
-                    List<Integer> positionsA = listA.get(i).getPositions();
-                    List<Integer> positionsB = listB.get(j).getPositions();
-
-                    int k = 0; // Pos A
-                    int l = 0; // Pos B
-                    // [to, be, or, not, to, be]
-                    while ((k < positionsA.size() && l < positionsB.size())) {
-                        if ((positionsA.get(k) <= positionsB.get(l))) { // could be same word
-                            // A behind B
-                            if (positionsB.get(l) - positionsA.get(k) == 1) {
-                                result.add(listB.get(j));
-                                break;
-                            } else {
-                                k++;
-                            }
-                        } else { // Pos of first word is equal to 
-                            l++;
-                        }
-                    }
-                    
-                    // Did not match, Next Doc
-                    i++;
-                    j++;
-                }
-            }
-        }
-
-        return result;
-    }
     
     private List<Posting> positionalIntersectMergePostings(List<Posting> listA, List<Posting> listB) {
         List<Posting> result = new ArrayList(); // Placeholder List
