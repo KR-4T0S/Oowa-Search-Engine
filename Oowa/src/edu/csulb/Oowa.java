@@ -42,8 +42,6 @@ public class Oowa {
         directory = inputDirectory.nextLine();
 
         // Load corpus
-        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("D:\\test"), ".json");
-        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
         DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
         Index index = startIndex(corpus);
 
@@ -65,7 +63,7 @@ public class Oowa {
             String choiceCommand = "";
             String choiceParameter = "";
             // Detect if it's command
-            if (query.charAt(0) == ':' && !query.equals(":q")) {
+            if (query.charAt(0) == ':' && !query.equals(":q") && query.length() > 0) {
                 if (query.indexOf(' ') >= 0) {
                     choiceCommand = query.substring(0, query.indexOf(' '));
                 } else {
@@ -210,9 +208,7 @@ public class Oowa {
             System.out.println("\t" + (i+1) + ": \t" + vocab.get(i));
             i++;
         }
-//        for (int i = 0; i < 1000; i++) {
-//            System.out.println("\t" + (i+1) + ": \t" + vocab.get(i));
-//        }
+
         System.out.println("\nTotal Vocabulary: " + vocab.size() + "\n");
     }
 }

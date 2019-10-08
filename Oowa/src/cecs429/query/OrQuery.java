@@ -23,8 +23,6 @@ public class OrQuery implements QueryComponent {
 
     @Override
     public List<Posting> getPostings(Index index, TokenProcessor processor) {
-        //System.out.println("\u001B[31m" + "====== OrQuery.getPostings() ======" + "\u001B[0m");
-        //System.out.println("\t" + mComponents.toString());
         List<Posting> result = new ArrayList();
 
         // For each component retrieved, merge results to one list of results
@@ -41,9 +39,9 @@ public class OrQuery implements QueryComponent {
         List<Posting> result = new ArrayList(); // Placeholder List
 
         if (listA.isEmpty()) { // no need for merge algorithm
-            result.addAll(listB);
+            result = listB;
         } else if (listB.isEmpty()) {
-            result.addAll(listA);
+            result = listA;
         } else { // Union merge algorithm
             int i = 0, j = 0;
             while (i < listA.size() && j < listB.size()) {
@@ -77,7 +75,7 @@ public class OrQuery implements QueryComponent {
     }
 
     public void setPositive(boolean value) {
-        // null
+        // Should not be possible
     }
     
     public boolean isPositive() {

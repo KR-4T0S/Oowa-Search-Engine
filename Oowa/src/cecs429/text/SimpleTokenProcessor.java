@@ -47,7 +47,7 @@ public class SimpleTokenProcessor implements TokenProcessor {
     }
 
     private String removeQuote(String str) {
-        return str.replaceAll("\'|\"|”", "");
+        return str.replaceAll("\'|\"|”|’", "");
     }
 
     private String removeNonAlphanum(String str) {

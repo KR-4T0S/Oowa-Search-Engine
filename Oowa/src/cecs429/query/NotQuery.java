@@ -26,7 +26,7 @@ public class NotQuery implements QueryComponent {
     }
 
     public void setPositive(boolean value) {
-        // Should not be
+        // Should not be possible
     }
     
     public boolean isPositive() {
