@@ -55,7 +55,16 @@ public class AdvancedTokenProcessor implements TokenProcessor {
             for (int i = 0; i < result.size(); i++) {
                 result.set(i, removeNonAlphanum(result.get(i)));
             }
-        } 
+        }
+        
+        
+        List<String> temp = new ArrayList<>();
+        for (int i = 0; i < result.size(); i++) {
+            if (!result.get(i).isEmpty()) {
+                temp.add(result.get(i));
+            }
+        }
+        result = temp;
 
         return result;
     }
