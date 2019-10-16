@@ -6,7 +6,7 @@ import java.util.List;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
-public class AdvancedTokenProcessor implements TokenProcessor {
+public class SimpleTokenProcessor implements TokenProcessor {
 
     @Override
     public List<String> processToken(String token) {
@@ -16,9 +16,7 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         //          (!He,llo. => He,llo) (192.186.1.1 => 192.186.1.1)
         // TODO:    remove all apostrophies and quotation marks
         token = removeQuote(removeNonAlphanum(token));
-
-        // TODO:    if hyphenated: split AND remove hyphens (turn to single word)
-        result = removeHyphen(token);
+        result.add(token);
 
         // TODO:    to lowercase
         result = toLower(result);
@@ -46,27 +44,6 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         }
 
         return list;
-    }
-
-    private List<String> removeHyphen(String str) {
-        List<String> result = new ArrayList<>(Arrays.asList(str.split("-")));
-        if (result.size() != 1) {
-            result.add(str.replaceAll("-", ""));
-            for (int i = 0; i < result.size(); i++) {
-                result.set(i, removeNonAlphanum(result.get(i)));
-            }
-        }
-        
-        
-        List<String> temp = new ArrayList<>();
-        for (int i = 0; i < result.size(); i++) {
-            if (!result.get(i).isEmpty()) {
-                temp.add(result.get(i));
-            }
-        }
-        result = temp;
-
-        return result;
     }
 
     private String removeQuote(String str) {

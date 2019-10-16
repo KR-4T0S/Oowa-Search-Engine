@@ -1,19 +1,35 @@
-package edu.csulb;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package diskindexer;
 
-import cecs429.documents.*;
-import cecs429.index.*;
-import cecs429.text.*;
-import cecs429.query.*;
+import cecs429.documents.DirectoryCorpus;
+import cecs429.documents.Document;
+import cecs429.documents.DocumentCorpus;
+import cecs429.index.DiskIndexWriter;
+import cecs429.index.Index;
+import cecs429.index.PositionalInvertedIndex;
+import cecs429.index.Posting;
+import cecs429.query.BooleanQueryParser;
+import cecs429.query.QueryComponent;
+import cecs429.text.AdvancedTokenProcessor;
+import cecs429.text.EnglishTokenStream;
+import cecs429.text.SimpleTokenProcessor;
+import cecs429.text.TokenProcessor;
 import java.io.IOException;
 import java.io.StringReader;
-
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
-import org.tartarus.snowball.SnowballStemmer;
-import org.tartarus.snowball.ext.englishStemmer;
 
-public class Oowa {
+/**
+ *
+ * @author RICHIE
+ */
+public class DiskIndexer {
     
     // Integer Constants
     public static final int MAX_VOCAB = 1000;
@@ -37,20 +53,15 @@ public class Oowa {
         Scanner inputQuery = new Scanner(System.in);
         Scanner inputDirectory = new Scanner(System.in);
 
-        // Prompt for directory
-        //System.out.print("Enter directory: ");
-        //directory = inputDirectory.nextLine();
-
         // Load corpus
-        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
-        Index index = startIndex(corpus);
+        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".txt");
+        Path path = Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\DiskIndexer\\chapters");
+        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(path, ".txt");
+        Index index = startIndex(corpus, path);
 
         // Init menu 
         do {
             System.out.print("[" + ANSI_RED + ":q " + ANSI_RESET + " → Quits Program] ");
-            System.out.print("[" + ANSI_RED + ":stem " + ANSI_RESET
-                    + ANSI_BOLD + "word" + ANSI_RESET + " → Quits Program] ");
             System.out.print("[" + ANSI_RED + ":index " + ANSI_RESET
                     + ANSI_BOLD + "directoryname" + ANSI_RESET + " → Index new directory] ");
             System.out.print("[" + ANSI_RED + ":vocab " + ANSI_RESET
@@ -73,14 +84,10 @@ public class Oowa {
             }
 
             if (!query.equals(":q")) {
-                if (choiceCommand.equals(":stem")) {
-                    choiceParameter = query.substring(query.indexOf(' ') + 1);
-                    System.out.println("\tOriginal: " + choiceParameter);
-                    System.out.println("\tStemmed: " + stemmer(choiceParameter) + "\n");
-                } else if (choiceCommand.equals(":index")) {
+                if (choiceCommand.equals(":index")) {
                     choiceParameter = query.substring(query.indexOf(' ') + 1);
                     corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
-                    index = startIndex(corpus);
+                    index = startIndex(corpus, path);
                 } else if (choiceCommand.equals(":vocab")) {
                     printVocab(index);
                 } else {
@@ -89,24 +96,7 @@ public class Oowa {
             }
         } while (!query.equals(":q"));
     }
-
-    private static Index startIndex(DocumentCorpus corpus) {
-        // Start tracking time for indexing
-        long startTime = System.currentTimeMillis();
-        System.out.println("\nIndexing...");
-
-        // Create index
-        Index index = indexCorpus(corpus);
-
-        // record total time for indexing
-        long endTime = System.currentTimeMillis();
-        long duration = (endTime - startTime);
-
-        System.out.println("\n== Indexing time: " + duration + " ms / " + duration / 1000.0 + " s ==");
-
-        return index;
-    }
-
+    
     private static void getResults(String query, Index index, DocumentCorpus corpus) throws IOException {
         // Init query parsing component
         BooleanQueryParser queryParser = new BooleanQueryParser();
@@ -164,6 +154,26 @@ public class Oowa {
             System.out.println("\u001B[31m" + e + "\u001B[0m");
         }
     }
+    
+    private static Index startIndex(DocumentCorpus corpus, Path path) throws IOException {
+        // Start tracking time for indexing
+        long startTime = System.currentTimeMillis();
+        System.out.println("\nIndexing...");
+
+        // Create index
+        Index index = indexCorpus(corpus);
+        // record total time for indexing
+        long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime);
+        
+        System.out.println("\n== Indexing time: " + duration + " ms / " + duration / 1000.0 + " s ==");
+        
+        System.out.println("Writing to disk...");
+        DiskIndexWriter indexWriter = new DiskIndexWriter();
+        indexWriter.WriteIndex(index, path);
+
+        return index;
+    }
 
     private static Index indexCorpus(DocumentCorpus corpus) {
         //HashSet<String> vocabulary = new HashSet<>();
@@ -190,15 +200,6 @@ public class Oowa {
         }
 
         return invertedIndex;
-    }
-
-    private static String stemmer(String str) {
-        SnowballStemmer snowballStemmer = new englishStemmer();
-        snowballStemmer.setCurrent(str);
-        snowballStemmer.stem();
-        String result = snowballStemmer.getCurrent();
-
-        return result;
     }
 
     private static void printVocab(Index index) {

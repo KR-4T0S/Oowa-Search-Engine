@@ -16,7 +16,7 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         //          (!He,llo. => He,llo) (192.186.1.1 => 192.186.1.1)
         // TODO:    remove all apostrophies and quotation marks
         token = removeQuote(removeNonAlphanum(token));
-
+            
         // TODO:    if hyphenated: split AND remove hyphens (turn to single word)
         result = removeHyphen(token);
 
@@ -25,6 +25,7 @@ public class AdvancedTokenProcessor implements TokenProcessor {
 
         // TODO:    stem using Porter2 stemmer
         result = snowballStemmer(result);
+        
 
         return result;
     }
@@ -55,9 +56,8 @@ public class AdvancedTokenProcessor implements TokenProcessor {
             for (int i = 0; i < result.size(); i++) {
                 result.set(i, removeNonAlphanum(result.get(i)));
             }
-        }
-        
-        
+        } 
+
         List<String> temp = new ArrayList<>();
         for (int i = 0; i < result.size(); i++) {
             if (!result.get(i).isEmpty()) {
@@ -65,7 +65,7 @@ public class AdvancedTokenProcessor implements TokenProcessor {
             }
         }
         result = temp;
-
+        
         return result;
     }
 
