@@ -3,7 +3,6 @@ package cecs429.query;
 import cecs429.index.Index;
 import cecs429.index.Posting;
 import cecs429.text.*;
-import static java.lang.Math.abs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
