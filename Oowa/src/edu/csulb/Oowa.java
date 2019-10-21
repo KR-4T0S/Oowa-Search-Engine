@@ -6,6 +6,7 @@ import cecs429.text.*;
 import cecs429.query.*;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -44,7 +45,7 @@ public class Oowa {
         // Load corpus
         DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
         //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
-        Index index = startIndex(corpus);
+        Index index = startIndex(corpus, Paths.get(directory));
 
         // Init menu 
         do {
@@ -80,7 +81,7 @@ public class Oowa {
                 } else if (choiceCommand.equals(":index")) {
                     choiceParameter = query.substring(query.indexOf(' ') + 1);
                     corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
-                    index = startIndex(corpus);
+                    index = startIndex(corpus, Paths.get(choiceParameter));
                 } else if (choiceCommand.equals(":vocab")) {
                     printVocab(index);
                 } else {
@@ -90,19 +91,37 @@ public class Oowa {
         } while (!query.equals(":q"));
     }
 
-    private static Index startIndex(DocumentCorpus corpus) {
+    private static Index startIndex(DocumentCorpus corpus, Path path) throws IOException {
         // Start tracking time for indexing
-        long startTime = System.currentTimeMillis();
+        long startTimeIndex = System.currentTimeMillis();
         System.out.println("\nIndexing...");
 
         // Create index
         Index index = indexCorpus(corpus);
 
         // record total time for indexing
-        long endTime = System.currentTimeMillis();
-        long duration = (endTime - startTime);
-
-        System.out.println("\n== Indexing time: " + duration + " ms / " + duration / 1000.0 + " s ==");
+        long endTimeIndex = System.currentTimeMillis();
+        long durationIndex = (endTimeIndex - startTimeIndex);
+        
+        System.out.println("\n== Indexing time: " + durationIndex + " ms / " + durationIndex / 1000.0 + " s ==");
+        
+        DiskIndexWriter writer = new DiskIndexWriter();
+        
+        if (writer.exists(path)) {
+            System.out.println("\nIndex exists on disk...\n");
+        } else {
+            // Write Index
+            long startTimeWrite = System.currentTimeMillis();
+            System.out.println("\nWriting to disk...");
+            
+            writer.WriteIndex(index, path);
+            
+            // record total time for writing
+            long endTimeWrite = System.currentTimeMillis();
+            long durationWrite = (endTimeWrite - startTimeWrite);
+            
+            System.out.println("\n== Writing time: " + durationWrite + " ms / " + durationWrite / 1000.0 + " s ==");
+        }
 
         return index;
     }
