@@ -59,66 +59,6 @@ public class PhraseLiteral implements QueryComponent {
 
         return result;
     }
-
-     private List<Posting> forwardPositionalIntersect(List<Posting> p1, List<Posting> p2, int k) {
-        List<Posting> result = new ArrayList();
-        
-        int i = 0, j = 0;
-        while (i < p1.size() && j < p2.size()) {                           
-            if (p1.get(i).getDocumentId() == p2.get(j).getDocumentId()) {
-                List<Integer> l = new ArrayList();
-                Posting posting = new Posting(p1.get(i).getDocumentId());
-                List<Integer> pp1 = p1.get(i).getPositions();
-                List<Integer> pp2 = p2.get(j).getPositions();
-                
-                int m = 0, n = 0;
-                while (m < pp1.size() && n < pp2.size()) {
-                    if (pp2.get(n) > pp1.get(m)) {
-                        if (pp2.get(n) - pp1.get(m) == k) {
-                            System.out.println("\tIDs: " + p1.get(i).getDocumentId() + " | " + p2.get(j).getDocumentId());
-                            System.out.println("\t\tMatch: " + pp1.get(m) + " | " + pp2.get(n));
-
-                            l.add(pp1.get(m));
-
-                            n++;
-                            m++;
-                        } else {
-                            n++;
-                        }
-                    } else if (pp2.get(n) < pp1.get(m)) {
-                        m++;
-                    } else { // both pos equal
-                        n++;
-                        m++;
-                    }
-                }     
-                if (!l.isEmpty()) {
-                    for (Integer ps: l) {
-                        posting.addPos(ps);
-                    }
-                    result.add(posting);
-                }
-                
-                i++;
-                j++;
-            } else if (p1.get(i).getDocumentId() < p2.get(j).getDocumentId()) {
-                i++;
-            } else {
-                j++;
-            }
-        }
-        
-        System.out.print("RESULT: \n\t[");
-        if (!result.isEmpty()) {
-            for (Posting p: result) {
-                System.out.print(p.getDocumentId() + " | ");
-            }
-        }
-        System.out.print("]\n");
-        
-        
-        return result;
-    }
     
     private List<Posting> positionalIntersect(List<Posting> p1, List<Posting> p2, int k) {
         List<Posting> result = new ArrayList();
@@ -130,22 +70,31 @@ public class PhraseLiteral implements QueryComponent {
                 List<Integer> pp1 = p1.get(i).getPositions();
                 List<Integer> pp2 = p2.get(j).getPositions();
                 
-                int m = 0, n = 0;
-                while (m < pp1.size()) {
-                    while (n < pp2.size()) {
-                        //System.out.println("\tComparing: " + pp1.get(m) + " | " + pp2.get(n));
+                
+                // For each of the VALID POSITIONS
+                for (int m = 0; m < pp1.size(); m++) {
+                    // Compare with each of SECOND SET OF POSITIONS
+                    for (int n = 0; n < pp2.size(); n++) {
                         if (pp2.get(n) - pp1.get(m) == k) {
-                            //System.out.println("\t\tMatch: " + pp1.get(m) + " | " + pp2.get(n));
                             l.add(pp1.get(m));
-                        } 
-                        else if (pp2.get(n) > pp1.get(m)) {
-                            //System.out.println("\t\tNO Match: " + pp1.get(m) + " | " + pp2.get(n));
-                            break;
                         }
-                        n++;
                     }
-                    m++;
                 }
+//                int m = 0, n = 0;
+//                while (m < pp1.size()) {
+//                    while (n < pp2.size()) {
+//                        System.out.println("\tComparing: " + pp1.get(m) + " | " + pp2.get(n));
+//                        if (pp2.get(n) - pp1.get(m) == k) {
+//                            //System.out.println("\t\tMatch: " + pp1.get(m) + " | " + pp2.get(n));
+//                            l.add(pp1.get(m));
+//                        } else if (pp2.get(n) > pp1.get(m)) {
+//                            //System.out.println("\t\tNO Match: " + pp1.get(m) + " | " + pp2.get(n));
+//                            break;
+//                        }
+//                        n++;
+//                    }
+//                    m++;
+//                }
                 
                 if (!l.isEmpty()) {
                     Posting tempPosting = new Posting(p1.get(i).getDocumentId());
@@ -167,7 +116,6 @@ public class PhraseLiteral implements QueryComponent {
         return result;
     }
     
-
     private List<Posting> unionMergePostings(List<Posting> listA, List<Posting> listB) {
         List<Posting> result = new ArrayList(); // Placeholder List
 
