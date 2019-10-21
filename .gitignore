@@ -21,3 +21,6 @@ TermDocumentMatrixImprovedHW2/nbproject/project.properties
 /demo_project/
 /DiskIndexer/nbproject/private/
 /DiskIndexer/build/
+DiskIndexer/nbproject/build-impl.xml
+DiskIndexer/nbproject/genfiles.properties
+DiskIndexer/nbproject/project.properties

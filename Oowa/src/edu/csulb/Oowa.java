@@ -38,12 +38,12 @@ public class Oowa {
         Scanner inputDirectory = new Scanner(System.in);
 
         // Prompt for directory
-        //System.out.print("Enter directory: ");
-        //directory = inputDirectory.nextLine();
+        System.out.print("Enter directory: ");
+        directory = inputDirectory.nextLine();
 
         // Load corpus
-        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
+        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
+        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
         Index index = startIndex(corpus);
 
         // Init menu 
