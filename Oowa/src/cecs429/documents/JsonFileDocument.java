@@ -31,15 +31,16 @@ public class JsonFileDocument implements FileDocument {
         mDocumentId = id;
         mFilePath = absoluteFilePath;
 
-        Gson gson = new Gson();
-        try (Reader reader = new FileReader(mFilePath.toString())) {
-            // Convert JSON File to Java Object
-            JsonDoc file = gson.fromJson(reader, JsonDoc.class);
-            mTitle = file.getTitle();
-            file = null;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        Gson gson = new Gson();
+//        try (Reader reader = new FileReader(mFilePath.toString())) {
+//            // Convert JSON File to Java Object
+//            JsonDoc file = gson.fromJson(reader, JsonDoc.class);
+//            mTitle = file.getTitle();
+//            file = null;
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+        mTitle = mFilePath.getFileName().toString();
     }
 
     @Override
