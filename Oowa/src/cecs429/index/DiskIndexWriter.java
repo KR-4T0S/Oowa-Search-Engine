@@ -46,13 +46,16 @@ public class DiskIndexWriter {
         // Start writing postings
         for (String term: index.getVocabulary()) {
             List<Posting> postings = index.getPostings(term);
+            //System.out.print("\n\"" + term + "\": ");
             
             // *** dft
             postingsStream.writeInt(postings.size());
+            //System.out.print("dft: " + postings.size() + " | ");
             
             // Starting pos of term for table
             Long postingPos = fileStream.getChannel().size() - 4; 
             result.add(postingPos);
+            //System.out.print(" (pos: " + postingPos + ")");
             
             // *** id_d
             int prevId = 0; // for gap
@@ -60,6 +63,7 @@ public class DiskIndexWriter {
                 int docId = doc.getDocumentId();
                 
                 postingsStream.writeInt(docId - prevId);
+                //System.out.print("\n\tid_d: " + (docId - prevId) + " | ");
                 prevId = docId;
                 
                 
@@ -67,14 +71,16 @@ public class DiskIndexWriter {
                 
                 // *** tf_t
                 postingsStream.writeInt(positions.size());
+                //System.out.print("\n\t\ttf_t: " + positions.size() + " | ");
                 
                 // *** pi
                 int prevPos = 0; // for gap
-                //int ctr = 0;
+                int ctr = 0;
                 for (Integer pos: positions) {
                     postingsStream.writeInt(pos - prevPos);
+                    //System.out.print("p_" + ctr + ": " + (pos - prevPos) + " ");
                     prevPos = pos;
-                    //ctr++;
+                    ctr++;
                 }
             }
             postingsStream.flush();
@@ -107,11 +113,13 @@ public class DiskIndexWriter {
         DataOutputStream vocabStream = new DataOutputStream(fileStream);
         
         for (String term: index.getVocabulary()) {
+            //System.out.print("\n\"" + term + "\": ");
             // Writes term in binary format
             vocabStream.writeBytes(term);
             
             // Starting pos of term for table
             Long vocabPos = fileStream.getChannel().size() - term.length();
+            //System.out.print(vocabPos + "\n");
             result.add(vocabPos);
             vocabStream.flush();
         }

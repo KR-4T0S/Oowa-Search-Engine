@@ -84,6 +84,9 @@ public class Oowa {
                     index = startIndex(corpus, Paths.get(choiceParameter));
                 } else if (choiceCommand.equals(":vocab")) {
                     printVocab(index);
+                } else if (choiceCommand.equals(":disk")) {
+                    Index diskIndex = new DiskInvertedIndex(directory);
+                    getResults(query, diskIndex, corpus);
                 } else {
                     getResults(query, index, corpus);
                 }
