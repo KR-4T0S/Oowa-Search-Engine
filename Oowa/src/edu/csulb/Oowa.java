@@ -46,7 +46,8 @@ public class Oowa {
         DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
         //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
         Index index = startIndex(corpus, Paths.get(directory));
-
+        Index diskIndex = new DiskInvertedIndex(directory);
+        
         // Init menu 
         do {
             System.out.print("[" + ANSI_RED + ":q " + ANSI_RESET + " → Quits Program] ");
@@ -85,8 +86,8 @@ public class Oowa {
                 } else if (choiceCommand.equals(":vocab")) {
                     printVocab(index);
                 } else if (choiceCommand.equals(":disk")) {
-                    Index diskIndex = new DiskInvertedIndex(directory);
-                    getResults(query, diskIndex, corpus);
+                    choiceParameter = query.substring(query.indexOf(' ') + 1);
+                    getResults(choiceParameter, diskIndex, corpus);
                 } else {
                     getResults(query, index, corpus);
                 }

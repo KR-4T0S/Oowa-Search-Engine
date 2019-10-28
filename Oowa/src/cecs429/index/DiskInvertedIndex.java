@@ -92,18 +92,19 @@ public class DiskInvertedIndex implements Index {
           new File(indexName, "vocabTable.bin"),
           "r");
          
-         byte[] byteBuffer = new byte[4];
-         tableFile.read(byteBuffer, 0, byteBuffer.length);
+         //byte[] byteBuffer = new byte[4];
+         //tableFile.read(byteBuffer, 0, byteBuffer.length);
         
          int tableIndex = 0;
-         vocabTable = new long[ByteBuffer.wrap(byteBuffer).getInt() * 2];
-         byteBuffer = new byte[8];
+         vocabTable = new long[(int) tableFile.length() / 8];
+         byte[] byteBuffer = new byte[8];
          
-         while (tableFile.read(byteBuffer, 0, byteBuffer.length) > 0) { // while we keep reading 4 bytes
+         while (tableFile.read(byteBuffer, 0, byteBuffer.length) > 0) { // while we keep reading 8 bytes
             vocabTable[tableIndex] = ByteBuffer.wrap(byteBuffer).getLong();
             tableIndex++;
          }
          tableFile.close();
+         //System.out.println(vocabTable.toString());
          return vocabTable;
       }
       catch (FileNotFoundException ex) {
@@ -112,6 +113,7 @@ public class DiskInvertedIndex implements Index {
       catch (IOException ex) {
          System.out.println(ex.toString());
       }
+      //System.out.println("readVocabTable: null");
       return null;
    }
 
@@ -161,40 +163,56 @@ public class DiskInvertedIndex implements Index {
         List<Posting> result = new ArrayList();
         
         long current = binarySearchVocabulary(term); // Start of Postings for term
-        
-        // dft, d_i, tf_t,d, p_i...
-        try {
-            // dft
-            mPostings.seek(current);
-            int dft = mPostings.readInt(); // reads dft
-            
-            // For each doc
-            for (int i = 0; i < dft; i++) {
-                // Get to d_i (doc id)
-                current += 4;
+        if (current >= 0) {
+            //System.out.println("getPosting() | long current = " + current);
+            // dft, d_i, tf_t,d, p_i...
+            try {
+                // dft
                 mPostings.seek(current);
-                int d_i = mPostings.readInt(); // Doc ID
-                Posting post = new Posting(d_i);
-                
-                // Get to tf_t
-                current += 4;
-                mPostings.seek(current);
-                int tf_t = mPostings.readInt();
-                
-                // Read p_i's
-                for (int j = 0; j < tf_t; j++) {
-                    // Jump to start of p_i
+                int dft = mPostings.readInt(); // reads dft
+                //System.out.println(term + ":");
+                //System.out.println("\tdft: " + dft);
+
+                // For each doc
+                int d_i = 0; // set for gap
+                for (int i = 0; i < dft; i++) {
+                    // Get to d_i (doc id)
                     current += 4;
                     mPostings.seek(current);
-                    int pos = mPostings.readInt(); // Pos
-                    post.addPos(pos);
+                    d_i += mPostings.readInt(); // Doc ID
+                    //System.out.println("\t\td_" + d_i);
+                    Posting post = new Posting(d_i);
+
+                    // Get to tf_t
+                    current += 4;
+                    mPostings.seek(current);
+                    int tf_t = mPostings.readInt();
+
+                    // Read p_i's
+                    //System.out.print("\t\t\t");
+                    int pos = 0;
+                    for (int j = 0; j < tf_t; j++) {
+                        // Jump to start of p_i
+                        current += 4;
+                        mPostings.seek(current);
+                        pos += mPostings.readInt(); // Pos
+                        //System.out.print(pos + " ");
+                        post.addPos(pos);
+                    }
+                    //System.out.println();
+                    
+                    result.add(post);
                 }
-                
-                result.add(post);
+            } catch (IOException ex) {
+                Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (IOException ex) {
-            Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+//        System.out.print("DiskIndexWriter.getPostings(): ");
+//        for (Posting p: result) {
+//            System.out.print(p.getDocumentId() + " ");
+//        }
+//        System.out.println();
         
         return result;
     }
