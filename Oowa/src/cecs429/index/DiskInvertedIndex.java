@@ -219,7 +219,32 @@ public class DiskInvertedIndex implements Index {
 
     @Override
     public List<String> getVocabulary() {
-        // TODO: implement method to retrieve all vocab for index
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<String> result = new ArrayList();
+        
+        for (int i = 0; i < mVocabTable.length; i++) {
+            if (i % 2 == 0) {
+                int termLength;
+                try {
+                    if (i == mVocabTable.length - 2) { // is last term
+                        termLength = (int)(mVocabList.length() - mVocabTable[i]);
+                    } else {
+                        termLength = (int) (mVocabTable[i + 2] - mVocabTable[i]);
+                    }
+                    
+                    // Read Term
+                    byte[] buffer = new byte[termLength];
+                    mVocabList.seek(mVocabTable[i]); // Jumps to first byte of word
+                    mVocabList.read(buffer, 0, termLength);
+                    
+                    // Read bytes as String
+                    String vocab = new String(buffer, "ASCII");
+                    result.add(vocab);
+                } catch (IOException ex) {
+                    Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        
+        return result;
     }
 }
