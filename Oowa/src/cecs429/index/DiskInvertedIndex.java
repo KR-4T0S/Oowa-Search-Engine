@@ -250,11 +250,33 @@ public class DiskInvertedIndex implements Index {
 
     @Override
     public List<Double> getWeights() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+       List<Double> result = new ArrayList();
+       
+       try {
+           // for every 8 bytes(i.e every doc)
+           for (int i = 0; i < mWeights.length(); i += 8) {
+                mWeights.seek(i);
+                result.add(mWeights.readDouble());
+           }
+       } catch (IOException ex) {
+           Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+       }
+        
+        return result;    
     }
 
     @Override
     public double getWeight(int docId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        double weight = -1;
+        long start = docId * 8;
+        
+        try {
+            mWeights.seek(start);
+            weight = mWeights.readDouble();
+        } catch (IOException ex) {
+            Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+       return weight;
     }
 }
