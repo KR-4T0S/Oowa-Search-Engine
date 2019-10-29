@@ -22,6 +22,7 @@ public class DiskInvertedIndex implements Index {
    private List<String> mFileNames;
    private RandomAccessFile mVocabList;
    private RandomAccessFile mPostings;
+   private RandomAccessFile mWeights;
    private long[] mVocabTable;
 
     // Opens a disk inverted index that was constructed in the given path.
@@ -30,6 +31,7 @@ public class DiskInvertedIndex implements Index {
          mPath = path + "/index/";
          mVocabList = new RandomAccessFile(new File(mPath, "vocab.bin"), "r");
          mPostings = new RandomAccessFile(new File(mPath, "postings.bin"), "r");
+         mWeights = new RandomAccessFile(new File(mPath, "docWeights.bin"), "r");
          mVocabTable = readVocabTable(mPath);
          mFileNames = readFileNames(mPath);
       }
@@ -37,8 +39,6 @@ public class DiskInvertedIndex implements Index {
          System.out.println(ex.toString());
       }
     }
-
-  
 
     // Locates the byte position of the postings for the given term.
     // For example, binarySearchVocabulary("angel") will return the byte position
@@ -250,6 +250,11 @@ public class DiskInvertedIndex implements Index {
 
     @Override
     public List<Double> getWeights() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public double getWeight(int docId) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

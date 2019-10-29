@@ -1,6 +1,5 @@
 package cecs429.index;
 
-import cecs429.documents.DirectoryCorpus;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,9 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 
 public class DiskIndexWriter {
@@ -26,6 +23,9 @@ public class DiskIndexWriter {
         
         // TODO: Create Vocab Table
         writeTable(postings, vocab, path);
+        
+        // TODO: Create Weights
+        writeWeight(index, path);
         
     }
     
@@ -151,7 +151,9 @@ public class DiskIndexWriter {
         // get weights
         List<Double> mDocWeights = index.getWeights();
         
+        //int doc_id = 0;
         for (Double weight: mDocWeights) {
+            //System.out.println("Doc: " + doc_id + " L_d:" + weight);
             weightsStream.writeDouble(weight);
             weightsStream.flush();
         }
@@ -166,7 +168,11 @@ public class DiskIndexWriter {
         File binPostings = new File(String.valueOf(path) + "\\index\\postings.bin");
         File binVocab = new File(String.valueOf(path) + "\\index\\vocab.bin");
         File binTable = new File(String.valueOf(path) + "\\index\\vocabTable.bin");
+        File binWeights = new File(String.valueOf(path) + "\\index\\docWeights.bin");
         
-        return (binPostings.exists() && binVocab.exists() && binTable.exists());
+        return (binPostings.exists() 
+                && binVocab.exists() 
+                && binTable.exists() 
+                && binWeights.exists());
     }
 }

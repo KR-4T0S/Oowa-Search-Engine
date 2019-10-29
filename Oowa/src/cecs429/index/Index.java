@@ -19,6 +19,8 @@ public interface Index {
      * Retrieves the map of term weights for each document.
      */
     List<Double> getWeights();
+    
+    double getWeight(int docId);
 
     /**
      * A (sorted) list of all terms in the index vocabulary.
