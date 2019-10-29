@@ -19,10 +19,12 @@ import java.util.Map;
 public class PositionalInvertedIndex implements Index {
 
     private final Map<String, LinkedList<Posting>> mIndex;
+    private final LinkedList<Map<String, Integer>> mDocTermFrequencies;
 
     // Constructor
     public PositionalInvertedIndex() {
         mIndex = new HashMap<>();
+        mDocTermFrequencies = new LinkedList<>();
     }
 
     @Override
@@ -44,9 +46,21 @@ public class PositionalInvertedIndex implements Index {
                 // Still working on existing document
                 if (mIndex.get(term).getLast().getDocumentId() == documentId) {
                     mIndex.get(term).getLast().addPos(pos);
+                    
+                    // Update weight for term in current document
+                    //System.out.println(mDocTermFrequencies.getLast());
+                    Map<String, Integer> newWeight = new HashMap();
+                    newWeight.put(term, mDocTermFrequencies.getLast().get(term) + 1);
+                    mDocTermFrequencies.removeLast();
+                    mDocTermFrequencies.add(newWeight);
                 } else { // New document, new posting
                     mIndex.get(term).add(new Posting(documentId));
                     mIndex.get(term).getLast().addPos(pos);
+                    
+                    // Create weight map for this term in new document
+                    Map<String, Integer> newWeight = new HashMap();
+                    newWeight.put(term, 1);
+                    mDocTermFrequencies.add(newWeight);
                 }
             } else {
                 // Term hasn't been indexed, add with new LinkedList as object
@@ -54,8 +68,32 @@ public class PositionalInvertedIndex implements Index {
                 postings.add(new Posting(documentId));
                 mIndex.put(term, postings);
                 mIndex.get(term).getLast().addPos(pos);
+                
+                // Create weight map for this term in new document
+                Map<String, Integer> newWeight = new HashMap();
+                newWeight.put(term, 1);
+                mDocTermFrequencies.add(newWeight);
             }
         }
+    }
+    
+    @Override
+    public List<Double> getWeights() {
+        List<Double> result = new ArrayList();
+        
+        for (Map<String, Integer> e: mDocTermFrequencies) {
+            double w_dt_sums = 0;
+            // w_dt and add to sum
+            for (String key: e.keySet()) {
+                double w_dt = 1 + Math.log(e.get(key));
+                w_dt_sums +=  Math.pow(w_dt, 2);
+            }
+            
+            double L_d = Math.sqrt(w_dt_sums);
+            result.add(L_d);
+        }
+        
+        return result; 
     }
 
     @Override

@@ -247,4 +247,9 @@ public class DiskInvertedIndex implements Index {
         
         return result;
     }
+
+    @Override
+    public List<Double> getWeights() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

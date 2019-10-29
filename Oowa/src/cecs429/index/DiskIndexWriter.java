@@ -1,5 +1,6 @@
 package cecs429.index;
 
+import cecs429.documents.DirectoryCorpus;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,7 +8,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 
 public class DiskIndexWriter {
@@ -135,6 +138,28 @@ public class DiskIndexWriter {
         fileStream.close();
     }
 
+    private void writeWeight(Index index, Path path) throws FileNotFoundException, IOException {
+        // Output file
+        File binWeights = new File(String.valueOf(path) + "\\index\\docWeights.bin");
+        // Create directory
+        binWeights.getParentFile().mkdirs();
+        
+        // Set File stream vars
+        FileOutputStream fileStream = new FileOutputStream(binWeights);
+        DataOutputStream weightsStream = new DataOutputStream(fileStream);
+        
+        // get weights
+        List<Double> mDocWeights = index.getWeights();
+        
+        for (Double weight: mDocWeights) {
+            weightsStream.writeDouble(weight);
+            weightsStream.flush();
+        }
+        
+        weightsStream.close();
+        fileStream.close();
+    }
+    
     // Verify if files exist
     public boolean exists(Path path) {
         
