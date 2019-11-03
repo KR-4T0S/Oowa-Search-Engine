@@ -8,7 +8,9 @@ import java.util.Map;
  * terms and the documents that contain them.
  */
 public interface Index {
-
+    
+    List<Posting> getNonPositionalPostings(String term);
+    
     /**
      * Retrieves a list of Postings of documents that contain the given term.
      */

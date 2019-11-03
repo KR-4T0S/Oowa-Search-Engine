@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class DiskInvertedIndex implements Index {
+public class DiskPositionalIndex implements Index {
 
    private String mPath;
    private List<String> mFileNames;
@@ -26,7 +26,7 @@ public class DiskInvertedIndex implements Index {
    private long[] mVocabTable;
 
     // Opens a disk inverted index that was constructed in the given path.
-    public DiskInvertedIndex(String path) {
+    public DiskPositionalIndex(String path) {
       try {
          mPath = path + "/index/";
          mVocabList = new RandomAccessFile(new File(mPath, "vocab.bin"), "r");
@@ -151,28 +151,26 @@ public class DiskInvertedIndex implements Index {
                }
            });
        } catch (IOException ex) {
-           Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+           Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
        }
        
        
        return result;
    }
    
-    @Override
-    public List<Posting> getPostings(String term) {
+    public List<Posting> getNonPositionalPostings(String term) {
         List<Posting> result = new ArrayList();
         
         long current = binarySearchVocabulary(term); // Start of Postings for term
         if (current >= 0) {
-            //System.out.println("getPosting() | long current = " + current);
             // dft, d_i, tf_t,d, p_i...
             try {
+                //System.out.print("\n\"" + term + "\": ");
                 // dft
                 mPostings.seek(current);
                 int dft = mPostings.readInt(); // reads dft
-                //System.out.println(term + ":");
-                //System.out.println("\tdft: " + dft);
-
+                //System.out.println("dft: " + dft);
+                
                 // For each doc
                 int d_i = 0; // set for gap
                 for (int i = 0; i < dft; i++) {
@@ -180,31 +178,74 @@ public class DiskInvertedIndex implements Index {
                     current += 4;
                     mPostings.seek(current);
                     d_i += mPostings.readInt(); // Doc ID
-                    //System.out.println("\t\td_" + d_i);
                     Posting post = new Posting(d_i);
+                    //System.out.println("\t\tID:" + d_i);
+                    
+                    // Get to tf_t
+                    current += 4;
+                    mPostings.seek(current);
+                    int tf_t = mPostings.readInt();
+                    //System.out.println("\t\t\t tf_t:" + tf_t);
+                    
+                    result.add(post);
+                    
+                    // skip p_i's
+                    current += tf_t * 4;
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        return result;
+    }
+    
+    @Override
+    public List<Posting> getPostings(String term) {
+        List<Posting> result = new ArrayList();
+        
+        long current = binarySearchVocabulary(term); // Start of Postings for term
+        if (current >= 0) {
+            // dft, d_i, tf_t,d, p_i...
+            try {
+                //System.out.print("\n\"" + term + "\": ");
+                // dft
+                mPostings.seek(current);
+                int dft = mPostings.readInt(); // reads dft
+                //System.out.println("dft: " + dft);
+                
+                // For each doc
+                int d_i = 0; // set for gap
+                for (int i = 0; i < dft; i++) {
+                    // Get to d_i (doc id)
+                    current += 4;
+                    mPostings.seek(current);
+                    d_i += mPostings.readInt(); // Doc ID
+                    Posting post = new Posting(d_i);
+                    //System.out.println("\t\tID:" + d_i);
 
                     // Get to tf_t
                     current += 4;
                     mPostings.seek(current);
                     int tf_t = mPostings.readInt();
+                    //System.out.println("\t\t\t tf_t:" + tf_t);
 
                     // Read p_i's
-                    //System.out.print("\t\t\t");
+                    //System.out.print("\t\t\t\t");
                     int pos = 0;
                     for (int j = 0; j < tf_t; j++) {
                         // Jump to start of p_i
                         current += 4;
                         mPostings.seek(current);
                         pos += mPostings.readInt(); // Pos
-                        //System.out.print(pos + " ");
                         post.addPos(pos);
+                        //System.out.print(pos + " ");
                     }
                     //System.out.println();
-                    
                     result.add(post);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
@@ -240,7 +281,7 @@ public class DiskInvertedIndex implements Index {
                     String vocab = new String(buffer, "ASCII");
                     result.add(vocab);
                 } catch (IOException ex) {
-                    Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -259,7 +300,7 @@ public class DiskInvertedIndex implements Index {
                 result.add(mWeights.readDouble());
            }
        } catch (IOException ex) {
-           Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+           Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
        }
         
         return result;    
@@ -274,7 +315,7 @@ public class DiskInvertedIndex implements Index {
             mWeights.seek(start);
             weight = mWeights.readDouble();
         } catch (IOException ex) {
-            Logger.getLogger(DiskInvertedIndex.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
         
        return weight;

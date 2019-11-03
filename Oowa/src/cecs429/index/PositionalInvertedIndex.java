@@ -128,4 +128,9 @@ public class PositionalInvertedIndex implements Index {
             
         return Math.sqrt(w_dt_sums);
     }
+
+    @Override
+    public List<Posting> getNonPositionalPostings(String term) {
+        return getPostings(term);
+    }
 }

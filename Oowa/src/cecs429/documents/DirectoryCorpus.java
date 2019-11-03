@@ -64,6 +64,7 @@ public class DirectoryCorpus implements DocumentCorpus {
             result.put(nextId, mFactories.get(getFileExtension(file)).createFileDocument(file, nextId));
             nextId++;
         }
+        
         return result;
     }
 

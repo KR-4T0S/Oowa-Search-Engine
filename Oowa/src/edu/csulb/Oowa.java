@@ -33,10 +33,10 @@ public class Oowa {
     public static final String ANSI_BOLD = "\u001B[1m";
 
     public static void main(String[] args) throws IOException {
-        // Variables for input/query
-        String query, directory;
-        Scanner inputQuery = new Scanner(System.in);
+        // Variables for input
+        String directory, mode;
         Scanner inputDirectory = new Scanner(System.in);
+        Scanner inputMode = new Scanner(System.in);
 
         // Prompt for directory
         System.out.print("Enter directory: ");
@@ -44,9 +44,33 @@ public class Oowa {
 
         // Load corpus
         DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-        //DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get("C:\\Users\\RICHIE\\Desktop\\CECS 429\\JsonSeparator\\jsonfiles"), ".json");
-        Index index = startIndex(corpus, Paths.get(directory));
-        Index diskIndex = new DiskInvertedIndex(directory);
+        corpus.getDocuments();
+        
+        // Prompt for directory
+        System.out.print("Choose Mode [ 1 = Boolean | 2 = Ranked]: ");
+        mode = inputMode.nextLine();
+        
+        if (mode.equals("1")) {
+            modeBoolean(corpus, directory);
+        } else {
+            modeRanked(corpus, directory);
+        }
+    }
+    
+    public static void modeBoolean(DocumentCorpus corpus, String directory) throws IOException {
+        // Variables for input
+        String query;
+        Scanner inputQuery = new Scanner(System.in);
+        
+        // Init index assets
+        Index index;
+        DiskIndexWriter writer = new DiskIndexWriter();
+        
+        if (!writer.exists(Paths.get(directory))) {
+            index = startIndex(corpus, Paths.get(directory));
+        }
+
+        Index diskIndex = new DiskPositionalIndex(directory);
         
         // Init menu 
         do {
@@ -84,17 +108,18 @@ public class Oowa {
                     corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
                     index = startIndex(corpus, Paths.get(choiceParameter));
                 } else if (choiceCommand.equals(":vocab")) {
-                    printVocab(index);
-                } else if (choiceCommand.equals(":diskvocab")){
                     printVocab(diskIndex);
-                } else if (choiceCommand.equals(":disk")) {
-                    choiceParameter = query.substring(query.indexOf(' ') + 1);
-                    getResults(choiceParameter, diskIndex, corpus);
                 } else {
-                    getResults(query, index, corpus);
+                    getResults(query, diskIndex, corpus);
                 }
             }
         } while (!query.equals(":q"));
+    }
+    
+    public static void modeRanked(DocumentCorpus corpus, String directory) {
+        // TODO: Process queries in ranked mode
+        String query;
+        Scanner inputQuery = new Scanner(System.in);
     }
 
     private static Index startIndex(DocumentCorpus corpus, Path path) throws IOException {
@@ -113,21 +138,17 @@ public class Oowa {
         
         DiskIndexWriter writer = new DiskIndexWriter();
         
-        if (writer.exists(path)) {
-            System.out.println("\nIndex exists on disk...\n");
-        } else {
-            // Write Index
-            long startTimeWrite = System.currentTimeMillis();
-            System.out.println("\nWriting to disk...");
-            
-            writer.WriteIndex(index, path);
-            
-            // record total time for writing
-            long endTimeWrite = System.currentTimeMillis();
-            long durationWrite = (endTimeWrite - startTimeWrite);
-            
-            System.out.println("\n== Writing time: " + durationWrite + " ms / " + durationWrite / 1000.0 + " s ==");
-        }
+        // Write Index
+        long startTimeWrite = System.currentTimeMillis();
+        System.out.println("\nWriting to disk...");
+
+        writer.WriteIndex(index, path);
+
+        // record total time for writing
+        long endTimeWrite = System.currentTimeMillis();
+        long durationWrite = (endTimeWrite - startTimeWrite);
+
+        System.out.println("\n== Writing time: " + durationWrite + " ms / " + durationWrite / 1000.0 + " s ==");
 
         return index;
     }
@@ -139,17 +160,19 @@ public class Oowa {
         // Default token processor
         TokenProcessor tokenProcessor = new SimpleTokenProcessor();
 
-        // TODO: remove try-catch once fixed
-        try {
+        //try {
             List<Posting> results = queryComponent.getPostings(index, tokenProcessor);
 
             if (results.isEmpty()) {
                 System.out.println("\tNo Results..." + "\n\n");
             } else {
                 int counter = 0;
+                System.out.println("\nTotal Results: " + results.size() + "\n\n");
                 for (Posting p : results) {
                     counter++;
-                    System.out.println("\t[ID:" + p.getDocumentId() + "] " + corpus.getDocument(p.getDocumentId()).getTitle());
+                    System.out.println("\t[ID:" + p.getDocumentId() + "] " 
+                            + corpus.getDocument(p.getDocumentId()).getTitle()
+                    );
                 }
 
                 System.out.println("\nTotal Results: " + counter + "\n\n");
@@ -185,9 +208,9 @@ public class Oowa {
             }
             System.out.println("------------");
 
-        } catch (Exception e) {
-            System.out.println("\u001B[31m" + e + "\u001B[0m");
-        }
+        //} catch (Exception e) {
+        //    System.out.println("\u001B[31m" + e + "\u001B[0m");
+        //}
     }
 
     private static Index indexCorpus(DocumentCorpus corpus) {
