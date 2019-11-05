@@ -186,7 +186,7 @@ public class DiskPositionalIndex implements Index {
                     mPostings.seek(current);
                     int tf_t = mPostings.readInt();
                     //System.out.println("\t\t\t tf_t:" + tf_t);
-                    
+                    post.setTf(tf_t); // We just want to know count
                     result.add(post);
                     
                     // skip p_i's
@@ -308,16 +308,17 @@ public class DiskPositionalIndex implements Index {
 
     @Override
     public double getWeight(int docId) {
-        double weight = -1;
+        double result = -1;
         long start = docId * 8;
         
         try {
             mWeights.seek(start);
-            weight = mWeights.readDouble();
+            result = mWeights.readDouble();
         } catch (IOException ex) {
             Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-       return weight;
+       
+       //System.out.println("DocID: " + docId + " Weight:" + result);
+       return result;
     }
 }

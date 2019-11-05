@@ -10,14 +10,22 @@ public class Posting {
 
     private int mDocumentId;
     private List<Integer> mPos;
+    private int mTftd;
+    
 
     public Posting(int documentId) {
         mDocumentId = documentId;
         mPos = new ArrayList<>();
+        mTftd = 0;
     }
 
     public void addPos(int pos) {
         mPos.add(pos);
+        mTftd++;
+    }
+    
+    public void setTf(int tf) {
+        mTftd = tf;
     }
 
     public int getDocumentId() {
@@ -26,5 +34,9 @@ public class Posting {
 
     public List getPositions() {
         return mPos;
+    }
+    
+    public int getTftd() {
+        return mTftd;
     }
 }

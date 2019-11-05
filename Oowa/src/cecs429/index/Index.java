@@ -17,6 +17,8 @@ public interface Index {
     List<Posting> getPostings(String term);
     
     
+    public int getTermCount();
+    
     /**
      * Retrieves the map of term weights for each document.
      */
