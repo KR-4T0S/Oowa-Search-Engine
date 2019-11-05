@@ -9,10 +9,7 @@ import java.io.StringReader;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -202,6 +199,7 @@ public class Oowa {
         Map<Integer, Accumulator> mapAccumulator = new HashMap<Integer, Accumulator>();
         PriorityQueue<Accumulator> heap = new PriorityQueue(); 
 
+        int N = corpus.getCorpusSize();
         //try {
             // for each term in query
             for (String term: terms) {
@@ -212,14 +210,14 @@ public class Oowa {
                     List<Posting> postings = diskIndex.getNonPositionalPostings(token);
                     float w_qt;
                     if (!postings.isEmpty()) {
-                        float idft = (float) diskIndex.getTermCount() / (float)postings.size();
+                        float idft = N / (float)postings.size();
                         w_qt = (float) Math.log(1 + idft);
                         
-                        System.out.println("W_q,t: ln(1 + " 
-                                + (float) diskIndex.getTermCount() 
-                                + "/" + (float)postings.size() 
-                                + ") => ln(1 + " + idft + ") => " 
-                                +  w_qt);
+//                        System.out.println("W_q,t: ln(1 + " 
+//                                + (float) diskIndex.getTermCount() 
+//                                + "/" + (float)postings.size() 
+//                                + ") => ln(1 + " + idft + ") => " 
+//                                +  w_qt);
                     } else {
                         w_qt = 0;
                     }
