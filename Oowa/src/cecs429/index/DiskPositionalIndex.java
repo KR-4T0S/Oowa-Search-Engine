@@ -117,6 +117,7 @@ public class DiskPositionalIndex implements Index {
       return null;
    }
 
+   @Override
     public int getTermCount() {
       return mVocabTable.length / 2;
    }

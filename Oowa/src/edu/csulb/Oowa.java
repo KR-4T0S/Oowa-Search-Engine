@@ -22,6 +22,7 @@ public class Oowa {
     // Integer Constants
     public static final int MAX_VOCAB = 1000;
     public static final int MAX_RANKED_RESULTS = 10;
+    public static final int MAX_DOC_LINE_SIZE = 100;
     
     // String Constants
     public static final String ANSI_RESET = "\u001B[0m";
@@ -47,18 +48,18 @@ public class Oowa {
         directory = inputDirectory.nextLine();
 
         // Load corpus
-        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-        corpus.getDocuments();
-        
-        menu(corpus, directory);
+        menu(directory);
     }
     
-    public static void menu(DocumentCorpus corpus, String directory) throws IOException {
+    public static void menu(String directory) throws IOException {
         // Variables for input
         String modeQuery, modeIndex;
         Scanner inputModeIndex = new Scanner(System.in);
         Scanner inputModeQuery = new Scanner(System.in);
 
+        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
+        corpus.getDocuments();
+        
         // Init index
         Index index = null;
         
@@ -135,7 +136,7 @@ public class Oowa {
         // Default token processor
         TokenProcessor tokenProcessor = new SimpleTokenProcessor();
 
-        //try {
+        try {
             List<Posting> results = queryComponent.getPostings(index, tokenProcessor);
 
             if (results.isEmpty()) {
@@ -158,33 +159,13 @@ public class Oowa {
                 System.out.print("View Document [ID / N]: ");
                 view = inputView.nextLine();
 
-                if (!view.toLowerCase().equals("n")) {
-                    int docId = Integer.parseInt(view);
-                    StringReader reader = (StringReader) corpus.getDocument(docId).getContent();
-                    int intValueOfChar;
-                    String docBody = "";
-                    // Read reader stream
-                    int charCounter = 0;
-                    while ((intValueOfChar = reader.read()) != -1) {
-                        if ((charCounter >= 100 && ((char) intValueOfChar) == ' ')) {
-                            intValueOfChar = 10;
-                            charCounter = 0;
-                        }
-                        docBody += (char) intValueOfChar;
-                        charCounter++;
-                    }
-                    reader.close();
-                    System.out.println("------------");
-                    //docBody = docBody.replaceAll("(.{100})", "$1\n");
-                    System.out.println("\nTitle: " + corpus.getDocument(docId).getTitle() + "\n");
-                    System.out.println("\n" + docBody + "\n");
-                }
+                readDocument(view, corpus);
             }
             System.out.println("------------");
 
-        //} catch (Exception e) {
-        //    System.out.println("\u001B[31m" + e + "\u001B[0m");
-        //}
+        } catch (Exception e) {
+            System.out.println("\u001B[31m" + e + "\u001B[0m");
+        }
     }
     
     public static void getResultsRanked(String query, DocumentCorpus corpus, String directory) {
@@ -200,7 +181,7 @@ public class Oowa {
         PriorityQueue<Accumulator> heap = new PriorityQueue(); 
 
         int N = corpus.getCorpusSize();
-        //try {
+        try {
             // for each term in query
             for (String term: terms) {
                 List<String> proccessedTerm = tokenProcessor.processToken(term);
@@ -271,13 +252,46 @@ public class Oowa {
                     );
                 }
                 System.out.println();
+                System.out.println("\nTotal Results: " + K + "\n\n");
+                
+                // Prompt to view doc
+                String view;
+                Scanner inputView = new Scanner(System.in);
+
+                System.out.print("View Document [ID / N]: ");
+                view = inputView.nextLine();
+
+                readDocument(view, corpus);
             }
-        //} catch (Exception e) {
-        //    System.out.println("\u001B[31m" + e + "\u001B[0m");
-        //}
+        } catch (Exception e) {
+            System.out.println("\u001B[31m" + e + "\u001B[0m");
+        }
 
     }
 
+    private static void readDocument(String input, DocumentCorpus corpus) throws IOException {
+        if (!input.toLowerCase().equals("n")) {
+            int docId = Integer.parseInt(input);
+            StringReader reader = (StringReader) corpus.getDocument(docId).getContent();
+            int intValueOfChar;
+            String docBody = "";
+            // Read reader stream
+            int charCounter = 0;
+            while ((intValueOfChar = reader.read()) != -1) {
+                if ((charCounter >= MAX_DOC_LINE_SIZE && ((char) intValueOfChar) == ' ')) {
+                    intValueOfChar = 10;
+                    charCounter = 0;
+                }
+                docBody += (char) intValueOfChar;
+                charCounter++;
+            }
+            reader.close();
+            System.out.println("------------");
+            System.out.println("\nTitle: " + corpus.getDocument(docId).getTitle() + "\n");
+            System.out.println("\n" + docBody + "\n");
+        }
+    }
+    
     private static Index startIndex(DocumentCorpus corpus, Path path) throws IOException {
         // Start tracking time for indexing
         long startTimeIndex = System.currentTimeMillis();
