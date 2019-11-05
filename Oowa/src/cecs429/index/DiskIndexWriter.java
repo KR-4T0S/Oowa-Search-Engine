@@ -108,10 +108,10 @@ public class DiskIndexWriter {
         
         for (String term: index.getVocabulary()) {
             // Writes term in binary format
-            vocabStream.writeBytes(term);
+            vocabStream.write(term.getBytes("UTF-8"));
             
             // Starting pos of term for table
-            Long vocabPos = fileStream.getChannel().size() - term.length();
+            Long vocabPos = fileStream.getChannel().size() - term.getBytes("UTF-8").length;
             result.add(vocabPos);
             vocabStream.flush();
         }

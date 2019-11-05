@@ -363,7 +363,7 @@ public class Oowa {
         List<String> vocab = index.getVocabulary();
         System.out.println("Vocabulary: ");
         int i = 0;
-        while (i < vocab.size() && i < MAX_VOCAB) {
+            while (i < vocab.size() /*&& i < MAX_VOCAB*/) {
             System.out.println("\t" + (i+1) + ": " + vocab.get(i));
             i++;
         }

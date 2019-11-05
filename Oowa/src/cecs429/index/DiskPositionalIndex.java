@@ -62,17 +62,16 @@ public class DiskPositionalIndex implements Index {
 
             byte[] buffer = new byte[termLength];
             mVocabList.read(buffer, 0, termLength);
-            String fileTerm = new String(buffer, "ASCII");
+            String fileTerm = new String(buffer, "UTF-8");
 
+            //System.out.println(fileTerm);
             int compareValue = term.compareTo(fileTerm);
             if (compareValue == 0) {
                // found it!
                return mVocabTable[m * 2 + 1];
-            }
-            else if (compareValue < 0) {
+            } else if (compareValue < 0) {
                j = m - 1;
-            }
-            else {
+            } else {
                i = m + 1;
             }
          }
@@ -117,7 +116,6 @@ public class DiskPositionalIndex implements Index {
       return null;
    }
 
-   @Override
     public int getTermCount() {
       return mVocabTable.length / 2;
    }
@@ -166,7 +164,7 @@ public class DiskPositionalIndex implements Index {
         if (current >= 0) {
             // dft, d_i, tf_t,d, p_i...
             try {
-                System.out.print("\n\"" + term + "\": ");
+                //System.out.print("\n\"" + term + "\": ");
                 // dft
                 mPostings.seek(current);
                 int dft = mPostings.readInt(); // reads dft
@@ -196,8 +194,6 @@ public class DiskPositionalIndex implements Index {
             } catch (IOException ex) {
                 Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } else {
-            System.out.println("Binary Search Failed: " + term);
         }
         
         return result;
@@ -250,8 +246,6 @@ public class DiskPositionalIndex implements Index {
             } catch (IOException ex) {
                 Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }  else {
-            System.out.println("Binary Search Failed: " + term);
         }
         
 //        System.out.print("DiskIndexWriter.getPostings(): ");
@@ -283,7 +277,7 @@ public class DiskPositionalIndex implements Index {
                     mVocabList.read(buffer, 0, termLength);
                     
                     // Read bytes as String
-                    String vocab = new String(buffer, "ASCII");
+                    String vocab = new String(buffer, "UTF-8");
                     result.add(vocab);
                 } catch (IOException ex) {
                     Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
