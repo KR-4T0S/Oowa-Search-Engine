@@ -166,7 +166,7 @@ public class DiskPositionalIndex implements Index {
         if (current >= 0) {
             // dft, d_i, tf_t,d, p_i...
             try {
-                //System.out.print("\n\"" + term + "\": ");
+                System.out.print("\n\"" + term + "\": ");
                 // dft
                 mPostings.seek(current);
                 int dft = mPostings.readInt(); // reads dft
@@ -196,6 +196,8 @@ public class DiskPositionalIndex implements Index {
             } catch (IOException ex) {
                 Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } else {
+            System.out.println("Binary Search Failed: " + term);
         }
         
         return result;
@@ -209,11 +211,11 @@ public class DiskPositionalIndex implements Index {
         if (current >= 0) {
             // dft, d_i, tf_t,d, p_i...
             try {
-                //System.out.print("\n\"" + term + "\": ");
+                System.out.print("\n\"" + term + "\": ");
                 // dft
                 mPostings.seek(current);
                 int dft = mPostings.readInt(); // reads dft
-                //System.out.println("dft: " + dft);
+                System.out.println("dft: " + dft);
                 
                 // For each doc
                 int d_i = 0; // set for gap
@@ -229,10 +231,10 @@ public class DiskPositionalIndex implements Index {
                     current += 4;
                     mPostings.seek(current);
                     int tf_t = mPostings.readInt();
-                    //System.out.println("\t\t\t tf_t:" + tf_t);
+                    System.out.println("\t\t\t tf_t:" + tf_t);
 
                     // Read p_i's
-                    //System.out.print("\t\t\t\t");
+                    System.out.print("\t\t\t\t");
                     int pos = 0;
                     for (int j = 0; j < tf_t; j++) {
                         // Jump to start of p_i
@@ -240,14 +242,16 @@ public class DiskPositionalIndex implements Index {
                         mPostings.seek(current);
                         pos += mPostings.readInt(); // Pos
                         post.addPos(pos);
-                        //System.out.print(pos + " ");
+                        System.out.print(pos + " ");
                     }
-                    //System.out.println();
+                    System.out.println();
                     result.add(post);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }  else {
+            System.out.println("Binary Search Failed: " + term);
         }
         
 //        System.out.print("DiskIndexWriter.getPostings(): ");

@@ -43,10 +43,13 @@ public class DiskIndexWriter {
         
         // Start writing postings
         for (String term: index.getVocabulary()) {
+            System.out.print("Writing " + term + " | ");
             List<Posting> postings = index.getPostings(term);
             
             // *** dft
-            postingsStream.writeInt(postings.size());
+            int dft = postings.size();
+            postingsStream.writeInt(dft);
+            System.out.print("dft: " + dft + "\n");
             
             // Starting pos of term for table
             Long postingPos = fileStream.getChannel().size() - 4; 
@@ -58,13 +61,16 @@ public class DiskIndexWriter {
                 int docId = doc.getDocumentId();
                 
                 postingsStream.writeInt(docId - prevId);
+                //System.out.print("\t\tDocID: " + (docId - prevId));
                 prevId = docId;
                 
                 
                 List<Integer> positions = doc.getPositions();
                 
                 // *** tf_t
+                int tft = positions.size();
                 postingsStream.writeInt(positions.size());
+                //System.out.print(" | tft: " + tft + "\n");
                 
                 // *** pi
                 int prevPos = 0; // for gap
@@ -75,6 +81,7 @@ public class DiskIndexWriter {
                     //ctr++;
                 }
             }
+            
             postingsStream.flush();
         }
         

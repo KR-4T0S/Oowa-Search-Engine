@@ -364,7 +364,7 @@ public class Oowa {
         System.out.println("Vocabulary: ");
         int i = 0;
         while (i < vocab.size() && i < MAX_VOCAB) {
-            System.out.println("\t" + (i+1) + ": \t" + vocab.get(i));
+            System.out.println("\t" + (i+1) + ": " + vocab.get(i));
             i++;
         }
 
