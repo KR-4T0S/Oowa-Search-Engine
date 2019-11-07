@@ -189,7 +189,7 @@ public class Oowa {
 
         String[] terms = query.split("\\s+");
 
-        PriorityQueue<Accumulator> heap = new PriorityQueue(); 
+        PriorityQueue<Accumulator> results = new PriorityQueue(); 
 
         int N = corpus.getCorpusSize();
         
@@ -206,15 +206,16 @@ public class Oowa {
         }
         
         try {
-            heap = strategy.get(diskIndex, tokenProcessor, N, terms);
+            WeightStrategyContext context = new WeightStrategyContext(strategy);
+            results = context.get(diskIndex, tokenProcessor, N, terms);
             
             // Results
-            if (heap.isEmpty()) {
+            if (results.isEmpty()) {
                 System.out.println("\tNo Results..." + "\n\n");
             } else {
-                int K = Math.min(MAX_RANKED_RESULTS, heap.size());
+                int K = Math.min(MAX_RANKED_RESULTS, results.size());
                 for (int i = 0; i < K; i++) {
-                    Accumulator acc = heap.poll();
+                    Accumulator acc = results.poll();
                     Posting p = acc.getPosting();
                     System.out.println("\t[ID:" + p.getDocumentId() + "] " 
                             + corpus.getDocument(p.getDocumentId()).getTitle()

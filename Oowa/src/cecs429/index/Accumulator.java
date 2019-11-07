@@ -4,18 +4,18 @@ import cecs429.index.Posting;
 
 public class Accumulator implements Comparable<Accumulator> {
     private final Posting mPosting;
-    private float mDocScore;
+    private double mDocScore;
     
     public Accumulator(Posting p) {
         mPosting = p;
         mDocScore = 0;
     }
     
-    public void incrementScore(float w_dt, float w_qt) {
+    public void incrementScore(double w_dt, double w_qt) {
         mDocScore += w_dt * w_qt;
     }
     
-    public void normalizeScore(float Ld) {
+    public void normalizeScore(double Ld) {
         mDocScore = mDocScore / Ld;
     }
     
@@ -23,7 +23,7 @@ public class Accumulator implements Comparable<Accumulator> {
         return mPosting;
     }
 
-    public float getScore() {
+    public double getScore() {
         return mDocScore;
     }
    

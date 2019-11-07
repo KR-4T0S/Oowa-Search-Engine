@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
 import com.google.gson.Gson;
+import java.io.File;
 import java.io.FileReader;
 import java.io.StringReader;
 
@@ -68,5 +69,11 @@ public class JsonFileDocument implements FileDocument {
 
     public static FileDocument loadJsonFileDocument(Path absolutePath, int documentId) {
         return new JsonFileDocument(documentId, absolutePath);
+    }
+
+    @Override
+    public double getByeSize() {
+        File file = new File(mFilePath.toString());
+        return file.length();
     }
 }

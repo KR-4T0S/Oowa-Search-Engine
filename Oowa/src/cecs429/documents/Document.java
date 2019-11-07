@@ -21,4 +21,7 @@ public interface Document {
      * The title of the document, for displaying to the user.
      */
     String getTitle();
+    
+    
+    double getByeSize();
 }

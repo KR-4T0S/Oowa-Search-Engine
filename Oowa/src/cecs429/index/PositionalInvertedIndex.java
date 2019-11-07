@@ -150,6 +150,7 @@ public class PositionalInvertedIndex implements Index {
                 
                 /* TEMP (?) */
                 docLength_d += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
+                docLength_A += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
                 sum_tf_td += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
                 /* TEMP (?) */
             }
@@ -157,16 +158,21 @@ public class PositionalInvertedIndex implements Index {
             double L_d = Math.sqrt(w_dt_sums);
             /* TEMP (?) */
             double avg_tf_td = sum_tf_td / mDocTermFrequencies.get(keyMapDocs).keySet().size();
+            double byteSize_d = mCorpus.getFileSize(keyMapDocs);
             /* TEMP (?) */
             
             result.add(L_d);
             /* TEMP (?) */
             // TODO: ADD IN ORDER-> docLength_d, byteSize_d, avg(tf_td);
+            result.add(docLength_d);
+            result.add(byteSize_d);
+            result.add(avg_tf_td);            
             /* TEMP (?) */
                 
             prev = keyMapDocs;
         }
         
+        docLength_A = (double) docLength_A / (double) (mDocTermFrequencies.keySet().size());
         /* TEMP (?) */
         // now add Total Corpus Doc Length as final set
         result.add(docLength_A);

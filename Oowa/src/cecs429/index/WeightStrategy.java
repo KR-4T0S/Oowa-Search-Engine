@@ -4,5 +4,9 @@ import cecs429.text.TokenProcessor;
 import java.util.PriorityQueue;
 
 public interface WeightStrategy {
-    public PriorityQueue<Accumulator> get(Index diskIndex, TokenProcessor tokenProcessor, int corpusSize, String[] terms);
+    public double getWqt(int corpusSize, int postingsSize);
+    
+    public double getWdt(int tftd);
+    
+    public double getLd(Index index, int docId);
 }

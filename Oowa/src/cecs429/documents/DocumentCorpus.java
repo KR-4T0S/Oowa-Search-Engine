@@ -19,4 +19,6 @@ public interface DocumentCorpus {
      * Returns the document with the given document ID.
      */
     Document getDocument(int id);
+    
+    public double getFileSize(int id);
 }
