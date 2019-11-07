@@ -1,5 +1,6 @@
 package cecs429.index;
 
+import cecs429.documents.DocumentCorpus;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -248,12 +249,6 @@ public class DiskPositionalIndex implements Index {
             }
         }
         
-//        System.out.print("DiskIndexWriter.getPostings(): ");
-//        for (Posting p: result) {
-//            System.out.print(p.getDocumentId() + " ");
-//        }
-//        System.out.println();
-        
         return result;
     }
 
@@ -288,6 +283,15 @@ public class DiskPositionalIndex implements Index {
         return result;
     }
 
+    /*
+    *   Doc Weights File Format
+    *   [docWeights_d]_0    [docLength_d]_0     [byteSize_d]_0      [avg(tf_td)]_0
+    *   [docWeights_d]_1    [docLength_d]_1     [byteSize_d]_1      [avg(tf_td)]_1
+    *   ..
+    *   [docWeights_d]_n-1  [docLength_d]_n-1   [byteSize_d]_n-1    [avg(tf_td)]_n-1
+    *   [docWeights_d]_n    [docLength_d]_n     [byteSize_d]_n      [avg(tf_td)]_n
+    *   [docLength_A]
+    */
     @Override
     public List<Double> getWeights() {
        List<Double> result = new ArrayList();
@@ -306,7 +310,7 @@ public class DiskPositionalIndex implements Index {
     }
 
     @Override
-    public double getWeight(int docId) {
+    public double getWeightDefault(int docId) {
         double result = -1;
         long start = docId * 8;
         

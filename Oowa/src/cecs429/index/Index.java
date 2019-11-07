@@ -1,7 +1,6 @@
 package cecs429.index;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * An Index can retrieve postings for a term from a data structure associating
@@ -24,7 +23,7 @@ public interface Index {
      */
     List<Double> getWeights();
     
-    double getWeight(int docId);
+    double getWeightDefault(int docId);
 
     /**
      * A (sorted) list of all terms in the index vocabulary.

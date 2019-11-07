@@ -36,12 +36,15 @@ public class Oowa {
     public static final String ANSI_WHITE = "\u001B[37m";
     public static final String ANSI_ITALIC = "\u001B[3m";
     public static final String ANSI_BOLD = "\u001B[1m";
+    public static final String WEIGHT_DEFAULT = "1";
+    public static final String WEIGHT_TF_IDF = "2";
+    public static final String WEIGHT_OKAPI = "3";
+    public static final String WEIGHT_WACKY = "4";
 
     public static void main(String[] args) throws IOException {
         // Variables for input
-        String directory, modeQuery, modeIndex;
+        String directory;
         Scanner inputDirectory = new Scanner(System.in);
-        Scanner inputModeQuery = new Scanner(System.in);
 
         // Prompt for directory
         System.out.print("Enter directory: ");
@@ -54,6 +57,7 @@ public class Oowa {
     public static void menu(String directory) throws IOException {
         // Variables for input
         String modeQuery, modeIndex;
+        String weightMode = WEIGHT_DEFAULT;
         Scanner inputModeIndex = new Scanner(System.in);
         Scanner inputModeQuery = new Scanner(System.in);
 
@@ -88,6 +92,11 @@ public class Oowa {
                         + ANSI_BOLD + "directoryname" + ANSI_RESET + " → Index new directory] ");
                 System.out.print("[" + ANSI_RED + ":vocab " + ANSI_RESET
                         + " → View vocab (first 1000)] ");
+                if (modeQuery.equals("2")) {
+                    System.out.println("\n[" + ANSI_RED + ":w [1 = Default | 2 = tf-idf | 3 = Okapi BM25 | 4 = Wacky] " + ANSI_RESET
+                        + " → Change weight scheme] ");
+                    System.out.println("Current Weight Scheme: " + weightMode);
+                }
 
                 // Start prompt for word
                 System.out.print("\nSearch:\t");
@@ -120,7 +129,12 @@ public class Oowa {
                         if (modeQuery.equals("1")) {
                             getResultsBoolean(query, diskIndex, corpus);
                         } else {
-                            getResultsRanked(query, corpus, directory);
+                            if (choiceCommand.equals(":w")) {
+                                choiceParameter = query.substring(query.indexOf(' ') + 1);
+                                weightMode = choiceParameter;
+                            } else {
+                                getResultsRanked(query, corpus, directory, weightMode);
+                            }
                         }
                     }
                 }
@@ -168,74 +182,31 @@ public class Oowa {
         }
     }
     
-    public static void getResultsRanked(String query, DocumentCorpus corpus, String directory) {
+    public static void getResultsRanked(String query, DocumentCorpus corpus, String directory, String weightMode) {
         TokenProcessor tokenProcessor = new SimpleTokenProcessor();
         Index diskIndex = new DiskPositionalIndex(directory);
+        WeightStrategy strategy = null;
 
-        //List<String> terms = tokenProcessor.processToken(query);
-        //System.out.println(terms);
         String[] terms = query.split("\\s+");
-        
-        // map for dupes
-        Map<Integer, Accumulator> mapAccumulator = new HashMap<Integer, Accumulator>();
+
         PriorityQueue<Accumulator> heap = new PriorityQueue(); 
 
         int N = corpus.getCorpusSize();
+        
+        switch(weightMode) {
+            case (WEIGHT_TF_IDF):
+                strategy = new OperationWeightTFIDF();
+                break;
+            case (WEIGHT_OKAPI):
+                break;
+            case (WEIGHT_WACKY):
+                break;
+            default:
+                strategy = new OperationWeightDefault();               
+        }
+        
         try {
-            // for each term in query
-            for (String term: terms) {
-                List<String> proccessedTerm = tokenProcessor.processToken(term);
-                // List is always 1 String.
-                for (String token: proccessedTerm) {
-                    // df_t
-                    List<Posting> postings = diskIndex.getNonPositionalPostings(token);
-                    float w_qt;
-                    if (!postings.isEmpty()) {
-                        float idft = N / (float)postings.size();
-                        w_qt = (float) Math.log(1 + idft);
-                        
-//                        System.out.println("W_q,t: ln(1 + " 
-//                                + (float) diskIndex.getTermCount() 
-//                                + "/" + (float)postings.size() 
-//                                + ") => ln(1 + " + idft + ") => " 
-//                                +  w_qt);
-                    } else {
-                        w_qt = 0;
-                    }
-                    
-                    for (Posting p: postings) {
-                        Accumulator A_d = null;
-                        
-                        // We already have an accumulator for this doc
-                        // tf_td can't be 0, so no need to worry about that case
-                        if (mapAccumulator.containsKey(p.getDocumentId())) {
-                            A_d = mapAccumulator.get(p.getDocumentId());
-                            int tf_td = p.getTftd();
-                            float w_dt = 1 + (float) Math.log(tf_td);
-                            A_d.incrementScore(w_dt, w_qt);
-                        } else { // Doc does not have accumulator
-                            A_d = new Accumulator(p);    
-                            int tf_td = p.getTftd();
-                            float w_dt = 1 + (float) Math.log(tf_td);
-                            A_d.incrementScore(w_dt, w_qt);
-                        }
-
-                        mapAccumulator.put(p.getDocumentId(), A_d);
-                    }
-                }
-            }
-
-            // Add accumulators to a binary heap priority queue
-            for (Accumulator A_d: mapAccumulator.values()) {
-                if (A_d.getScore() != 0) {
-                    float L_d = (float) diskIndex.getWeight(A_d.getPosting().getDocumentId());
-                    //System.out.println("Doc: " + A_d.getPosting().getDocumentId() );
-                    //System.out.print("\tA_d / L_d => " + A_d.getScore() + " / " + L_d);
-                    A_d.normalizeScore(L_d);
-                    //System.out.print(" => " + A_d.getScore() + " \n");
-                }
-                heap.add(A_d);
-            }
+            heap = strategy.get(diskIndex, tokenProcessor, N, terms);
             
             // Results
             if (heap.isEmpty()) {
@@ -326,7 +297,7 @@ public class Oowa {
     private static Index indexCorpus(DocumentCorpus corpus) {
         //HashSet<String> vocabulary = new HashSet<>();
         AdvancedTokenProcessor processor = new AdvancedTokenProcessor();
-        PositionalInvertedIndex invertedIndex = new PositionalInvertedIndex();
+        PositionalInvertedIndex invertedIndex = new PositionalInvertedIndex(corpus);
 
         // Get all the documents in the corpus by calling GetDocuments().
         Iterable<Document> docs = corpus.getDocuments();
