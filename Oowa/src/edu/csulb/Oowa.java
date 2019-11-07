@@ -37,7 +37,7 @@ public class Oowa {
     public static final String ANSI_ITALIC = "\u001B[3m";
     public static final String ANSI_BOLD = "\u001B[1m";
     public static final String WEIGHT_DEFAULT = "1";
-    public static final String WEIGHT_TF_IDF = "2";
+    public static final String WEIGHT_TRADITIONAL = "2";
     public static final String WEIGHT_OKAPI = "3";
     public static final String WEIGHT_WACKY = "4";
 
@@ -194,7 +194,7 @@ public class Oowa {
         int N = corpus.getCorpusSize();
         
         switch(weightMode) {
-            case (WEIGHT_TF_IDF):
+            case (WEIGHT_TRADITIONAL):
                 strategy = new OperationWeightTFIDF();
                 break;
             case (WEIGHT_OKAPI):
