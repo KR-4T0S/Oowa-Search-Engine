@@ -24,6 +24,14 @@ public interface Index {
     List<Double> getWeights();
     
     double getWeightDefault(int docId);
+    
+    double getDocLength(int docId);
+    
+    double getDocByteSize(int docId);
+    
+    double getAvgTftd(int docId);
+    
+    double getAvgDocLength();
 
     /**
      * A (sorted) list of all terms in the index vocabulary.

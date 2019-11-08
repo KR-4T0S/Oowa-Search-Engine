@@ -26,14 +26,16 @@ public class WeightStrategyContext {
                 // df_t
                 List<Posting> postings = diskIndex.getNonPositionalPostings(token);
                 double w_qt = mStrategy.getWqt(corpusSize, postings.size());
-
+                System.out.println("wQT(\""+ token +"\")" + w_qt);
+                
                 for (Posting p: postings) {
                     Accumulator A_d = null;
 
                     // We already have an accumulator for this doc
                     // tf_td can't be 0, so no need to worry about that case
                     int tf_td = p.getTftd();
-                    double w_dt = mStrategy.getWdt(tf_td);
+                    double w_dt = mStrategy.getWdt(tf_td, diskIndex, p.getDocumentId());
+                    System.out.println("wDt(" + p.getDocumentId() + "): " + w_dt);
                     if (mapAccumulator.containsKey(p.getDocumentId())) {
                         A_d = mapAccumulator.get(p.getDocumentId());
                         A_d.incrementScore(w_dt, w_qt);
@@ -49,8 +51,9 @@ public class WeightStrategyContext {
 
         // Add accumulators to a binary heap priority queue
         for (Accumulator A_d: mapAccumulator.values()) {
+            double L_d = mStrategy.getLd(diskIndex, A_d.getPosting().getDocumentId());
+            System.out.println("Ld(" + A_d.getPosting().getDocumentId() + "): " + L_d);
             if (A_d.getScore() != 0) {
-                double L_d = mStrategy.getLd(diskIndex, A_d.getPosting().getDocumentId());
                 A_d.normalizeScore(L_d);
             }
             heap.add(A_d);

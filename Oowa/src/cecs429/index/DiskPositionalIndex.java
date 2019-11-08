@@ -285,6 +285,7 @@ public class DiskPositionalIndex implements Index {
 
     /*
     *   Doc Weights File Format
+    *   0                   8                   16                  24
     *   [docWeights_d]_0    [docLength_d]_0     [byteSize_d]_0      [avg(tf_td)]_0
     *   [docWeights_d]_1    [docLength_d]_1     [byteSize_d]_1      [avg(tf_td)]_1
     *   ..
@@ -321,7 +322,66 @@ public class DiskPositionalIndex implements Index {
             Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
        
-       //System.out.println("DocID: " + docId + " Weight:" + result);
+       return result;
+    }
+
+    @Override
+    public double getDocLength(int docId) {
+        double result = -1;
+        long start = (docId * 8) + 8;
+        
+        try {
+            mWeights.seek(start);
+            result = mWeights.readDouble();
+        } catch (IOException ex) {
+            Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
+       return result;
+    }
+
+    @Override
+    public double getDocByteSize(int docId) {
+        double result = -1;
+        long start = (docId * 8) + 16;
+        
+        try {
+            mWeights.seek(start);
+            result = mWeights.readDouble();
+        } catch (IOException ex) {
+            Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
+       return result;
+    }
+
+    @Override
+    public double getAvgTftd(int docId) {
+        double result = -1;
+        long start = (docId * 8) + 24;
+        
+        try {
+            mWeights.seek(start);
+            result = mWeights.readDouble();
+        } catch (IOException ex) {
+            Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
+       return result;
+    }
+
+    @Override
+    public double getAvgDocLength() {
+        double result = -1;
+        
+        try {
+            long start = mWeights.length() - 8;
+            mWeights.seek(start);
+            result = mWeights.readDouble();
+        } catch (IOException ex) {
+            Logger.getLogger(DiskPositionalIndex.class.getName()).log(Level.SEVERE, null, ex);
+        }
+       
        return result;
     }
 }

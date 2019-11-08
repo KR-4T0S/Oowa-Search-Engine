@@ -15,7 +15,7 @@ public class OperationWeightTFIDF implements WeightStrategy{
     }
 
     @Override
-    public double getWdt(int tftd) {
+    public double getWdt(int tftd, Index index, int docId) {
         return tftd;
     }
 

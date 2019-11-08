@@ -4,17 +4,18 @@ public class OperationWeightOkapi implements WeightStrategy{
 
     @Override
     public double getWqt(int corpusSize, int postingsSize) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        double temp = Math.log((double)(corpusSize - postingsSize + 0.5) / (double)(postingsSize + 0.5));
+        return Math.max(0.1, temp);
     }
 
     @Override
-    public double getWdt(int tftd) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public double getWdt(int tftd, Index index, int docId) {
+        return (double)(2.2 * tftd) / (double)((1.2 * (0.25 + (0.75 * (index.getDocLength(docId) / index.getAvgDocLength())))) + tftd);
     }
 
     @Override
     public double getLd(Index index, int docId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return 1;
     }
     
 }

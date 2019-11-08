@@ -190,16 +190,16 @@ public class Oowa {
         String[] terms = query.split("\\s+");
 
         PriorityQueue<Accumulator> results = new PriorityQueue(); 
-
-        int N = corpus.getCorpusSize();
         
         switch(weightMode) {
             case (WEIGHT_TRADITIONAL):
                 strategy = new OperationWeightTFIDF();
                 break;
             case (WEIGHT_OKAPI):
+                strategy = new OperationWeightOkapi();
                 break;
             case (WEIGHT_WACKY):
+                strategy = new OperationWeightWacky();
                 break;
             default:
                 strategy = new OperationWeightDefault();               
@@ -207,7 +207,7 @@ public class Oowa {
         
         try {
             WeightStrategyContext context = new WeightStrategyContext(strategy);
-            results = context.get(diskIndex, tokenProcessor, N, terms);
+            results = context.get(diskIndex, tokenProcessor, corpus.getCorpusSize(), terms);
             
             // Results
             if (results.isEmpty()) {

@@ -161,12 +161,12 @@ public class PositionalInvertedIndex implements Index {
             double byteSize_d = mCorpus.getFileSize(keyMapDocs);
             /* TEMP (?) */
             
-            result.add(L_d);
+            result.add(L_d); // docWeights_d
             /* TEMP (?) */
             // TODO: ADD IN ORDER-> docLength_d, byteSize_d, avg(tf_td);
-            result.add(docLength_d);
-            result.add(byteSize_d);
-            result.add(avg_tf_td);            
+            result.add(docLength_d); // docLength_d
+            result.add(byteSize_d); // byteSize_d
+            result.add(avg_tf_td);  // avg(tftd)
             /* TEMP (?) */
                 
             prev = keyMapDocs;
@@ -193,7 +193,47 @@ public class PositionalInvertedIndex implements Index {
             
         return Math.sqrt(w_dt_sums);
     }
+    
+    @Override
+    public double getDocLength(int docId) {
+        double docLength = 0;
+        
+        for (String keyMapFreqs: mDocTermFrequencies.get(docId).keySet()) {
+            docLength += mDocTermFrequencies.get(docId).get(keyMapFreqs);
+        }
+        
+        return docLength;
+    }
 
+    @Override
+    public double getDocByteSize(int docId) {
+        return mCorpus.getFileSize(docId);
+    }
+
+    @Override
+    public double getAvgTftd(int docId) {
+        double tf_td = 0;
+        
+        for (String keyMapFreqs: mDocTermFrequencies.get(docId).keySet()) {
+            tf_td += mDocTermFrequencies.get(docId).get(keyMapFreqs);
+        }
+        
+        return tf_td / mDocTermFrequencies.get(docId).keySet().size();
+    }
+
+    @Override
+    public double getAvgDocLength() {
+        double docLengthSum = 0;
+        
+        for (Integer keyMapDocs: mDocTermFrequencies.keySet()) {
+            for (String keyMapFreqs: mDocTermFrequencies.get(keyMapDocs).keySet()) {
+                docLengthSum += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
+            }
+        }
+        
+        return docLengthSum / (double) mDocTermFrequencies.keySet().size();
+    }
+    
     @Override
     public List<Posting> getNonPositionalPostings(String term) {
         return getPostings(term);
@@ -203,4 +243,5 @@ public class PositionalInvertedIndex implements Index {
     public int getTermCount() {
         return mIndex.keySet().size();
     }
+
 }
