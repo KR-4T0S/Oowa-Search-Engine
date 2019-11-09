@@ -6,8 +6,6 @@
 package cecs429.index;
 
 import cecs429.documents.DocumentCorpus;
-import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,7 +38,7 @@ public class PositionalInvertedIndex implements Index {
             return result;  // Returns term if it's indexed.
         }
         
-        return result = new ArrayList<>(); // Returns empty list otherwise
+        return result = new ArrayList(); // Returns empty list otherwise
     }
 
     public void addTerm(List<String> terms, int documentId, int pos) {
@@ -100,15 +98,6 @@ public class PositionalInvertedIndex implements Index {
         return result;
     }
 
-    /*
-    *   Doc Weights File Format
-    *   [docWeights_d]_0    [docLength_d]_0     [byteSize_d]_0      [avg(tf_td)]_0
-    *   [docWeights_d]_1    [docLength_d]_1     [byteSize_d]_1      [avg(tf_td)]_1
-    *   ..
-    *   [docWeights_d]_n-1  [docLength_d]_n-1   [byteSize_d]_n-1    [avg(tf_td)]_n-1
-    *   [docWeights_d]_n    [docLength_d]_n     [byteSize_d]_n      [avg(tf_td)]_n
-    *   [docLength_A]
-    */
     @Override
     public List<Double> getWeights() {
         List<Double> result = new ArrayList();
@@ -124,20 +113,14 @@ public class PositionalInvertedIndex implements Index {
             // Fills in weights for empty files
             while(keyMapDocs - prev != 1) {
                 result.add((double) 0); // docWeights_d
-                
-                /* TEMP (?) */
                 result.add((double) 0); // docLength_d
                 result.add((double) 0); // byteSize_d;
                 result.add((double) 0); // avg(tf_td);
-                /* TEMP (?) */
-                
                 prev++;
             } 
-                      
-            /* TEMP (?) */
+            
             double docLength_d = 0;
             double sum_tf_td = 0;
-            /* TEMP (?) */
             
             // w_dt and add to sum
             // For each term
@@ -148,35 +131,34 @@ public class PositionalInvertedIndex implements Index {
                 // (wdt^2)
                 w_dt_sums +=  w_dt * w_dt;
                 
-                /* TEMP (?) */
                 docLength_d += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
                 docLength_A += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
                 sum_tf_td += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
-                /* TEMP (?) */
             }
-
+            
             double L_d = Math.sqrt(w_dt_sums);
-            /* TEMP (?) */
             double avg_tf_td = sum_tf_td / mDocTermFrequencies.get(keyMapDocs).keySet().size();
             double byteSize_d = mCorpus.getFileSize(keyMapDocs);
-            /* TEMP (?) */
             
             result.add(L_d); // docWeights_d
-            /* TEMP (?) */
-            // TODO: ADD IN ORDER-> docLength_d, byteSize_d, avg(tf_td);
             result.add(docLength_d); // docLength_d
             result.add(byteSize_d); // byteSize_d
             result.add(avg_tf_td);  // avg(tftd)
-            /* TEMP (?) */
-                
+            
+            //System.out.println("\tDoc(" + keyMapDocs + "):");
+            //System.out.println("\t\tdocWeight: " + L_d);
+            //System.out.println("\t\tdocLength: " + docLength_d);
+            //System.out.println("\t\tdocByteSize: " + byteSize_d);
+            //System.out.println("\t\tavgTftd: " + avg_tf_td);
+            
             prev = keyMapDocs;
         }
         
         docLength_A = (double) docLength_A / (double) (mDocTermFrequencies.keySet().size());
-        /* TEMP (?) */
-        // now add Total Corpus Doc Length as final set
+        //System.out.println("AvgDocLength" + docLength_A);
+        
         result.add(docLength_A);
-        /* TEMP (?) */
+
         
         return result; 
     }

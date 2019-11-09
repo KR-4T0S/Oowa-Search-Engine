@@ -3,7 +3,6 @@ package cecs429.query;
 import cecs429.index.Index;
 import cecs429.index.Posting;
 import cecs429.text.TokenProcessor;
-import java.util.ArrayList;
 
 import java.util.List;
 
@@ -25,10 +24,12 @@ public class NotQuery implements QueryComponent {
         return mComponent.getPostings(index, processor);
     }
 
+    @Override
     public void setPositive(boolean value) {
         // Should not be possible
     }
     
+    @Override
     public boolean isPositive() {
         return mComponent.isPositive();
     }

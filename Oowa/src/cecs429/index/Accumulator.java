@@ -1,7 +1,5 @@
 package cecs429.index;
 
-import cecs429.index.Posting;
-
 public class Accumulator implements Comparable<Accumulator> {
     private final Posting mPosting;
     private double mDocScore;
@@ -29,6 +27,7 @@ public class Accumulator implements Comparable<Accumulator> {
    
     @Override
     public int compareTo(Accumulator t) {
+        // For heap comparison, reversed as to not use Collections Reverse Order
         if (mDocScore < t.getScore()) {
             return 1;
         } else if (mDocScore > t.getScore()) {

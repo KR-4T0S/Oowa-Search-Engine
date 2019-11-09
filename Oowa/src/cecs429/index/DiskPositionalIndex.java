@@ -1,6 +1,5 @@
 package cecs429.index;
 
-import cecs429.documents.DocumentCorpus;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,19 +11,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 public class DiskPositionalIndex implements Index {
 
-   private String mPath;
-   private List<String> mFileNames;
-   private RandomAccessFile mVocabList;
-   private RandomAccessFile mPostings;
-   private RandomAccessFile mWeights;
-   private long[] mVocabTable;
+    // Constants
+    public static int DOC_WEIGHT_GROUP_SIZE = 32;
+    public static int DOUBLE_SIZE;
+    
+    private String mPath;
+    private List<String> mFileNames;
+    private RandomAccessFile mVocabList;
+    private RandomAccessFile mPostings;
+    private RandomAccessFile mWeights;
+    private long[] mVocabTable;
 
     // Opens a disk inverted index that was constructed in the given path.
     public DiskPositionalIndex(String path) {
@@ -96,8 +100,8 @@ public class DiskPositionalIndex implements Index {
          //tableFile.read(byteBuffer, 0, byteBuffer.length);
         
          int tableIndex = 0;
-         vocabTable = new long[(int) tableFile.length() / 8];
-         byte[] byteBuffer = new byte[8];
+         vocabTable = new long[(int) tableFile.length() / DOUBLE_SIZE];
+         byte[] byteBuffer = new byte[DOUBLE_SIZE];
          
          while (tableFile.read(byteBuffer, 0, byteBuffer.length) > 0) { // while we keep reading 8 bytes
             vocabTable[tableIndex] = ByteBuffer.wrap(byteBuffer).getLong();
@@ -283,23 +287,13 @@ public class DiskPositionalIndex implements Index {
         return result;
     }
 
-    /*
-    *   Doc Weights File Format
-    *   0                   8                   16                  24
-    *   [docWeights_d]_0    [docLength_d]_0     [byteSize_d]_0      [avg(tf_td)]_0
-    *   [docWeights_d]_1    [docLength_d]_1     [byteSize_d]_1      [avg(tf_td)]_1
-    *   ..
-    *   [docWeights_d]_n-1  [docLength_d]_n-1   [byteSize_d]_n-1    [avg(tf_td)]_n-1
-    *   [docWeights_d]_n    [docLength_d]_n     [byteSize_d]_n      [avg(tf_td)]_n
-    *   [docLength_A]
-    */
     @Override
     public List<Double> getWeights() {
        List<Double> result = new ArrayList();
        
        try {
-           // for every 8 bytes(i.e every doc)
-           for (int i = 0; i < mWeights.length(); i += 8) {
+           // for every weight value
+           for (int i = 0; i < mWeights.length(); i += DOUBLE_SIZE) {
                 mWeights.seek(i);
                 result.add(mWeights.readDouble());
            }
@@ -313,7 +307,7 @@ public class DiskPositionalIndex implements Index {
     @Override
     public double getWeightDefault(int docId) {
         double result = -1;
-        long start = docId * 8;
+        long start = docId * DOC_WEIGHT_GROUP_SIZE;
         
         try {
             mWeights.seek(start);
@@ -328,7 +322,7 @@ public class DiskPositionalIndex implements Index {
     @Override
     public double getDocLength(int docId) {
         double result = -1;
-        long start = (docId * 8) + 8;
+        long start = (docId * DOC_WEIGHT_GROUP_SIZE) + (DOUBLE_SIZE * 1);
         
         try {
             mWeights.seek(start);
@@ -343,7 +337,7 @@ public class DiskPositionalIndex implements Index {
     @Override
     public double getDocByteSize(int docId) {
         double result = -1;
-        long start = (docId * 8) + 16;
+        long start = (docId * DOC_WEIGHT_GROUP_SIZE) + (DOUBLE_SIZE * 2);
         
         try {
             mWeights.seek(start);
@@ -358,7 +352,7 @@ public class DiskPositionalIndex implements Index {
     @Override
     public double getAvgTftd(int docId) {
         double result = -1;
-        long start = (docId * 8) + 24;
+        long start = (docId * DOC_WEIGHT_GROUP_SIZE) + (DOUBLE_SIZE * 3);
         
         try {
             mWeights.seek(start);
@@ -375,7 +369,8 @@ public class DiskPositionalIndex implements Index {
         double result = -1;
         
         try {
-            long start = mWeights.length() - 8;
+            // Just gets the last 8 bytes.
+            long start = mWeights.length() - DOUBLE_SIZE;
             mWeights.seek(start);
             result = mWeights.readDouble();
         } catch (IOException ex) {

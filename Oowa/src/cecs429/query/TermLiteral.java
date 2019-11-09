@@ -75,10 +75,12 @@ public class TermLiteral implements QueryComponent {
         return result;
     }
 
+    @Override
     public void setPositive(boolean value) {
         mIsPositive = value;
     }
     
+    @Override
     public boolean isPositive() {
         return mIsPositive;
     }

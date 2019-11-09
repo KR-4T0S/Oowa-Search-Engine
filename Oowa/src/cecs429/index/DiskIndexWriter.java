@@ -43,13 +43,13 @@ public class DiskIndexWriter {
         
         // Start writing postings
         for (String term: index.getVocabulary()) {
-            System.out.print("Writing " + term + " | ");
+            //System.out.print("Writing " + term + " | ");
             List<Posting> postings = index.getPostings(term);
             
             // *** dft
             int dft = postings.size();
             postingsStream.writeInt(dft);
-            System.out.print("dft: " + dft + "\n");
+            //System.out.print("dft: " + dft + "\n");
             
             // Starting pos of term for table
             Long postingPos = fileStream.getChannel().size() - 4; 

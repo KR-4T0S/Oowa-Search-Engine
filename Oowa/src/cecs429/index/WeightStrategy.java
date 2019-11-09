@@ -1,8 +1,5 @@
 package cecs429.index;
 
-import cecs429.text.TokenProcessor;
-import java.util.PriorityQueue;
-
 public interface WeightStrategy {
     public double getWqt(int corpusSize, int postingsSize);
     

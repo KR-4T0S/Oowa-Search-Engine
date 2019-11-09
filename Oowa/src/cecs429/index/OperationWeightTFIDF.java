@@ -6,7 +6,7 @@ public class OperationWeightTFIDF implements WeightStrategy{
     public double getWqt(int corpusSize, int postingsSize) {
         double w_qt;
         if (postingsSize != 0) {
-            double idft = (double) corpusSize / postingsSize;
+            double idft = (double) corpusSize / (double) postingsSize;
             w_qt = Math.log(idft);
         } else {
             w_qt = 0;

@@ -4,14 +4,12 @@ import cecs429.documents.*;
 import cecs429.index.*;
 import cecs429.text.*;
 import cecs429.query.*;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
-
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import org.tartarus.snowball.SnowballStemmer;
@@ -36,6 +34,8 @@ public class Oowa {
     public static final String ANSI_WHITE = "\u001B[37m";
     public static final String ANSI_ITALIC = "\u001B[3m";
     public static final String ANSI_BOLD = "\u001B[1m";
+    public static final String QUERY_MODE_BOOLEAN = "1";
+    public static final String QUERY_MODE_RANKED = "2";
     public static final String WEIGHT_DEFAULT = "1";
     public static final String WEIGHT_TRADITIONAL = "2";
     public static final String WEIGHT_OKAPI = "3";
@@ -78,7 +78,7 @@ public class Oowa {
         if (modeIndex.equals("1")) {
             index = startIndex(corpus, Paths.get(directory));
         } else {
-            Index diskIndex = new DiskPositionalIndex(directory);
+            index = new DiskPositionalIndex(directory);
             
             // Prompt for Querying Mode
             System.out.print("Choose Mode [ 1 = Boolean | 2 = Ranked ]: ");
@@ -92,6 +92,8 @@ public class Oowa {
                         + ANSI_BOLD + "directoryname" + ANSI_RESET + " → Index new directory] ");
                 System.out.print("[" + ANSI_RED + ":vocab " + ANSI_RESET
                         + " → View vocab (first 1000)] ");
+                System.out.print("\n[" + ANSI_RED + ":mode " + ANSI_RESET
+                        + " → Toggle between Boolean (1) or Ranked (2)] ");
                 if (modeQuery.equals("2")) {
                     System.out.println("\n[" + ANSI_RED + ":w [1 = Default | 2 = tf-idf | 3 = Okapi BM25 | 4 = Wacky] " + ANSI_RESET
                         + " → Change weight scheme] ");
@@ -121,19 +123,34 @@ public class Oowa {
                         System.out.println("\tStemmed: " + stemmer(choiceParameter) + "\n");
                     } else if (choiceCommand.equals(":index")) {
                         choiceParameter = query.substring(query.indexOf(' ') + 1);
-                        corpus = DirectoryCorpus.loadTextDirectory(Paths.get(choiceParameter), ".json");
-                        index = startIndex(corpus, Paths.get(choiceParameter));
+                        // Change to new directory
+                        directory = choiceParameter;
+                        // Load corpus from new directory
+                        corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
+                        corpus.getDocuments(); // Loads files from corpus for callback.
+                        // Creates/Gets index from given directory.
+                        index = startIndex(corpus, Paths.get(directory));
                     } else if (choiceCommand.equals(":vocab")) {
-                        printVocab(diskIndex);
-                    } else {
-                        if (modeQuery.equals("1")) {
-                            getResultsBoolean(query, diskIndex, corpus);
+                        // This will grab vocab right from vocab.bin
+                        printVocab(index);
+                    } else if (choiceCommand.equals(":mode")) {
+                        // Just toggle mode. Nothing else need sto change here.
+                        if (modeQuery.equals(QUERY_MODE_BOOLEAN)) {
+                            modeQuery = QUERY_MODE_RANKED;
                         } else {
+                            modeQuery = QUERY_MODE_BOOLEAN;
+                        }
+                    } else {
+                        // Conditional querying, depending on query mode.
+                        if (modeQuery.equals(QUERY_MODE_BOOLEAN)) {
+                            getResultsBoolean(query, index, corpus);
+                        } else {
+                            // Weight formula option for Ranked query.
                             if (choiceCommand.equals(":w")) {
                                 choiceParameter = query.substring(query.indexOf(' ') + 1);
                                 weightMode = choiceParameter;
-                            } else {
-                                getResultsRanked(query, corpus, directory, weightMode);
+                            } else { // Get results given current weight mode.
+                                getResultsRanked(query, index, corpus, weightMode);
                             }
                         }
                     }
@@ -143,7 +160,7 @@ public class Oowa {
         
     }
     
-    private static void getResultsBoolean(String query, Index index, DocumentCorpus corpus) throws IOException {
+    private static void getResultsBoolean(String query, Index index, DocumentCorpus corpus) {
         // Init query parsing component
         BooleanQueryParser queryParser = new BooleanQueryParser();
         QueryComponent queryComponent = queryParser.parseQuery(query);
@@ -153,10 +170,12 @@ public class Oowa {
         try {
             List<Posting> results = queryComponent.getPostings(index, tokenProcessor);
 
+            // Don't do anything if there's no results.. duh
             if (results.isEmpty()) {
                 System.out.println("\tNo Results..." + "\n\n");
             } else {
                 int counter = 0;
+                // Console output format for every result.
                 for (Posting p : results) {
                     counter++;
                     System.out.println("\t[ID:" + p.getDocumentId() + "] " 
@@ -166,14 +185,7 @@ public class Oowa {
 
                 System.out.println("\nTotal Results: " + counter + "\n\n");
 
-                // Prompt to view doc
-                String view;
-                Scanner inputView = new Scanner(System.in);
-
-                System.out.print("View Document [ID / N]: ");
-                view = inputView.nextLine();
-
-                readDocument(view, corpus);
+                readDocument(corpus);
             }
             System.out.println("------------");
 
@@ -182,15 +194,17 @@ public class Oowa {
         }
     }
     
-    public static void getResultsRanked(String query, DocumentCorpus corpus, String directory, String weightMode) {
+    public static void getResultsRanked(String query, Index index, DocumentCorpus corpus, String weightMode) {
         TokenProcessor tokenProcessor = new SimpleTokenProcessor();
-        Index diskIndex = new DiskPositionalIndex(directory);
         WeightStrategy strategy = null;
 
+        // Just consider terms by space character.
         String[] terms = query.split("\\s+");
 
+        // Heap for results.
         PriorityQueue<Accumulator> results = new PriorityQueue(); 
         
+        // Use strategy depending on weightMode param
         switch(weightMode) {
             case (WEIGHT_TRADITIONAL):
                 strategy = new OperationWeightTFIDF();
@@ -207,16 +221,19 @@ public class Oowa {
         
         try {
             WeightStrategyContext context = new WeightStrategyContext(strategy);
-            results = context.get(diskIndex, tokenProcessor, corpus.getCorpusSize(), terms);
+            results = context.get(index, tokenProcessor, corpus.getCorpusSize(), terms);
             
-            // Results
+            // Don't do anything if heap is empty
             if (results.isEmpty()) {
                 System.out.println("\tNo Results..." + "\n\n");
             } else {
+                // Either print MAX results if heap has that or more.
+                // or just as many results as heap contains.
                 int K = Math.min(MAX_RANKED_RESULTS, results.size());
                 for (int i = 0; i < K; i++) {
-                    Accumulator acc = results.poll();
-                    Posting p = acc.getPosting();
+                    Accumulator acc = results.poll(); // Pop and Get greatest value from heap.
+                    Posting p = acc.getPosting(); // Retrieve Posting from the Accumulator
+                    // Format result for console output.
                     System.out.println("\t[ID:" + p.getDocumentId() + "] " 
                             + corpus.getDocument(p.getDocumentId()).getTitle()
                             + ": "
@@ -226,14 +243,8 @@ public class Oowa {
                 System.out.println();
                 System.out.println("\nTotal Results: " + K + "\n\n");
                 
-                // Prompt to view doc
-                String view;
-                Scanner inputView = new Scanner(System.in);
-
-                System.out.print("View Document [ID / N]: ");
-                view = inputView.nextLine();
-
-                readDocument(view, corpus);
+                
+                readDocument(corpus);
             }
         } catch (Exception e) {
             System.out.println("\u001B[31m" + e + "\u001B[0m");
@@ -241,7 +252,15 @@ public class Oowa {
 
     }
 
-    private static void readDocument(String input, DocumentCorpus corpus) throws IOException {
+    private static void readDocument(DocumentCorpus corpus) throws IOException {
+        // Prompt to view doc
+        String input;
+        Scanner inputView = new Scanner(System.in);
+
+        System.out.print("View Document [ID / N]: ");
+        input = inputView.nextLine();
+
+        // If user wants to read
         if (!input.toLowerCase().equals("n")) {
             int docId = Integer.parseInt(input);
             StringReader reader = (StringReader) corpus.getDocument(docId).getContent();
@@ -249,6 +268,7 @@ public class Oowa {
             String docBody = "";
             // Read reader stream
             int charCounter = 0;
+            // This'll create an artificial text-wrap for document's content.
             while ((intValueOfChar = reader.read()) != -1) {
                 if ((charCounter >= MAX_DOC_LINE_SIZE && ((char) intValueOfChar) == ' ')) {
                     intValueOfChar = 10;
@@ -265,6 +285,13 @@ public class Oowa {
     }
     
     private static Index startIndex(DocumentCorpus corpus, Path path) throws IOException {
+        DiskIndexWriter writer = new DiskIndexWriter();
+        // If the index is already written, just use that.
+        if (writer.exists(path)) {
+            //corpus.getDocuments();
+            return new DiskPositionalIndex(path.toString());
+        }
+        
         // Start tracking time for indexing
         long startTimeIndex = System.currentTimeMillis();
         System.out.println("\nIndexing...");
@@ -277,8 +304,6 @@ public class Oowa {
         long durationIndex = (endTimeIndex - startTimeIndex);
         
         System.out.println("\n== Indexing time: " + durationIndex + " ms / " + durationIndex / 1000.0 + " s ==");
-        
-        DiskIndexWriter writer = new DiskIndexWriter();
         
         // Write Index
         long startTimeWrite = System.currentTimeMillis();
@@ -335,7 +360,7 @@ public class Oowa {
         List<String> vocab = index.getVocabulary();
         System.out.println("Vocabulary: ");
         int i = 0;
-            while (i < vocab.size() /*&& i < MAX_VOCAB*/) {
+            while (i < vocab.size() && i < MAX_VOCAB) {
             System.out.println("\t" + (i+1) + ": " + vocab.get(i));
             i++;
         }
