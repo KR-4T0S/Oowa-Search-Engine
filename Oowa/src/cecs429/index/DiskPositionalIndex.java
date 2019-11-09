@@ -21,7 +21,7 @@ public class DiskPositionalIndex implements Index {
 
     // Constants
     public static int DOC_WEIGHT_GROUP_SIZE = 32;
-    public static int DOUBLE_SIZE;
+    public static int DOUBLE_SIZE = 8;
     
     private String mPath;
     private List<String> mFileNames;
