@@ -27,16 +27,17 @@ public class JsonFileDocument implements FileDocument {
         mFilePath = absoluteFilePath;
 
         // Title => content of "title" WITHIN file.
-//        Gson gson = new Gson();
-//        try (Reader reader = new FileReader(mFilePath.toString())) {
-//            // Convert JSON File to Java Object
-//            JsonDoc file = gson.fromJson(reader, JsonDoc.class);
-//            mTitle = file.getTitle();
-//            file = null;
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-        mTitle = mFilePath.getFileName().toString();
+        Gson gson = new Gson();
+        try (Reader reader = new FileReader(mFilePath.toString())) {
+            // Convert JSON File to Java Object
+            JsonDoc file = gson.fromJson(reader, JsonDoc.class);
+            mTitle = file.getTitle() + " (\"" + mFilePath.getFileName().toString() + "\")";
+            //System.out.println("Loaded: " + mTitle);
+            file = null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        //mTitle = mFilePath.getFileName().toString();
     }
 
     @Override

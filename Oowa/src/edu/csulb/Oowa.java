@@ -61,8 +61,6 @@ public class Oowa {
         Scanner inputModeIndex = new Scanner(System.in);
         Scanner inputModeQuery = new Scanner(System.in);
 
-        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
-        corpus.getDocuments();
         
         // Init index
         Index index = null;
@@ -75,6 +73,9 @@ public class Oowa {
         System.out.print("Start [ 1 = Build Index | 2 = Query Index ]: ");
         modeIndex = inputModeIndex.nextLine();
 
+        DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
+        corpus.getDocuments();
+        
         if (modeIndex.equals("1")) {
             index = startIndex(corpus, Paths.get(directory));
         } else {
@@ -178,9 +179,12 @@ public class Oowa {
                 // Console output format for every result.
                 for (Posting p : results) {
                     counter++;
-                    System.out.println("\t[ID:" + p.getDocumentId() + "] " 
-                            + corpus.getDocument(p.getDocumentId()).getTitle()
-                    );
+                    System.out.print("\n\t");
+                    System.out.format("%-12s", "[ID:" + p.getDocumentId() + "] ");
+                    System.out.print(corpus.getDocument(p.getDocumentId()).getTitle());
+//                    System.out.println("\t[ID:" + p.getDocumentId() + "] " c
+//                            + corpus.getDocument(p.getDocumentId()).getTitle()
+//                    );
                 }
 
                 System.out.println("\nTotal Results: " + counter + "\n\n");
@@ -234,11 +238,16 @@ public class Oowa {
                     Accumulator acc = results.poll(); // Pop and Get greatest value from heap.
                     Posting p = acc.getPosting(); // Retrieve Posting from the Accumulator
                     // Format result for console output.
-                    System.out.println("\t[ID:" + p.getDocumentId() + "] " 
-                            + corpus.getDocument(p.getDocumentId()).getTitle()
-                            + ": "
-                            + acc.getScore()
-                    );
+                    System.out.print("\n\t");
+                    System.out.format("%-12s", "[ID:" + p.getDocumentId() + "] ");
+                    System.out.print(corpus.getDocument(p.getDocumentId()).getTitle()
+                                + ": "
+                                + acc.getScore());
+//                    System.out.println("\t[ID:" + p.getDocumentId() + "] " 
+//                            + corpus.getDocument(p.getDocumentId()).getTitle()
+//                            + ": "
+//                            + acc.getScore()
+//                    );
                 }
                 System.out.println();
                 System.out.println("\nTotal Results: " + K + "\n\n");
