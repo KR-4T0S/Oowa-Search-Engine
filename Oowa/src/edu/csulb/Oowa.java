@@ -96,7 +96,8 @@ public class Oowa {
                 System.out.print("\n[" + ANSI_RED + ":mode " + ANSI_RESET
                         + " → Toggle between Boolean (1) or Ranked (2)] ");
                 if (modeQuery.equals("2")) {
-                    System.out.println("\n[" + ANSI_RED + ":w [1 = Default | 2 = tf-idf | 3 = Okapi BM25 | 4 = Wacky] " + ANSI_RESET
+                    System.out.println("\n[" + ANSI_RED + ":w " + ANSI_RESET
+                            + ANSI_BOLD + "[1 = Default | 2 = tf-idf | 3 = Okapi BM25 | 4 = Wacky] " + ANSI_RESET
                         + " → Change weight scheme] ");
                     System.out.println("Current Weight Scheme: " + weightMode);
                 }
@@ -187,7 +188,7 @@ public class Oowa {
 //                    );
                 }
 
-                System.out.println("\nTotal Results: " + counter + "\n\n");
+                System.out.println("\n\nTotal Results: " + counter + "\n\n");
 
                 readDocument(corpus);
             }
@@ -249,8 +250,8 @@ public class Oowa {
 //                            + acc.getScore()
 //                    );
                 }
-                System.out.println();
-                System.out.println("\nTotal Results: " + K + "\n\n");
+                
+                System.out.println("\n\nTotal Results: " + K + "\n\n");
                 
                 
                 readDocument(corpus);
