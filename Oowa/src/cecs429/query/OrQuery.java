@@ -74,10 +74,12 @@ public class OrQuery implements QueryComponent {
         return result;
     }
 
+    @Override
     public void setPositive(boolean value) {
         // Should not be possible
     }
     
+    @Override
     public boolean isPositive() {
         return true;
     }

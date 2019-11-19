@@ -77,9 +77,11 @@ public class PhraseLiteral implements QueryComponent {
                     for (int n = 0; n < pp2.size(); n++) {
                         if (pp2.get(n) - pp1.get(m) == k) {
                             l.add(pp1.get(m));
+                            break;
                         }
                     }
                 }
+                
 //                int m = 0, n = 0;
 //                while (m < pp1.size()) {
 //                    while (n < pp2.size()) {
@@ -155,10 +157,12 @@ public class PhraseLiteral implements QueryComponent {
         return result;
     }
     
+    @Override
     public void setPositive(boolean value) {
         mIsPositive = value;
     }
 
+    @Override
     public boolean isPositive() {
         return mIsPositive;
     }

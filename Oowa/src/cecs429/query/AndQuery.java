@@ -153,10 +153,12 @@ public class AndQuery implements QueryComponent {
         return result;
     }
     
+    @Override
     public void setPositive(boolean value) {
         // null
     }
     
+    @Override
     public boolean isPositive() {
         return true;
     }

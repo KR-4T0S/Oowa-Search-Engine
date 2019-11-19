@@ -2,16 +2,11 @@ package cecs429.documents;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.reflect.TypeToken;
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.FileReader;
 import java.io.StringReader;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Represents a document that is saved as a simple text file in the local file
@@ -19,9 +14,9 @@ import java.util.logging.Logger;
  */
 public class JsonFileDocument implements FileDocument {
 
-    private int mDocumentId;
-    private Path mFilePath;
-    private String mTitle;
+    private final int mDocumentId;
+    private final Path mFilePath;
+    private final String mTitle;
 
     /**
      * Constructs a TextFileDocument with the given document ID representing the
@@ -31,15 +26,18 @@ public class JsonFileDocument implements FileDocument {
         mDocumentId = id;
         mFilePath = absoluteFilePath;
 
+        // Title => content of "title" WITHIN file.
         Gson gson = new Gson();
         try (Reader reader = new FileReader(mFilePath.toString())) {
             // Convert JSON File to Java Object
             JsonDoc file = gson.fromJson(reader, JsonDoc.class);
-            mTitle = file.getTitle();
+            mTitle = file.getTitle() + " (\"" + mFilePath.getFileName().toString() + "\")";
+            //System.out.println("Loaded: " + mTitle);
             file = null;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        //mTitle = mFilePath.getFileName().toString();
     }
 
     @Override
@@ -72,5 +70,11 @@ public class JsonFileDocument implements FileDocument {
 
     public static FileDocument loadJsonFileDocument(Path absolutePath, int documentId) {
         return new JsonFileDocument(documentId, absolutePath);
+    }
+
+    @Override
+    public double getByeSize() {
+        File file = new File(mFilePath.toString());
+        return file.length();
     }
 }

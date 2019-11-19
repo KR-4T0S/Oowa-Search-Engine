@@ -24,6 +24,9 @@ public class DiskIndexWriter {
         // TODO: Create Vocab Table
         writeTable(postings, vocab, path);
         
+        // TODO: Create Weights
+        writeWeight(index, path);
+        
     }
     
     private List<Long> writePostings(Index index, Path path) throws FileNotFoundException, IOException {
@@ -34,28 +37,23 @@ public class DiskIndexWriter {
         // Create directory
         binPostings.getParentFile().mkdirs();
         
-        if (binPostings.exists()) {
-            //System.out.println("postings.bin already exsits");
-            return result;
-        }
-        
         // Set File stream vars
         FileOutputStream fileStream = new FileOutputStream(binPostings);
         DataOutputStream postingsStream = new DataOutputStream(fileStream);
         
         // Start writing postings
         for (String term: index.getVocabulary()) {
+            //System.out.print("Writing " + term + " | ");
             List<Posting> postings = index.getPostings(term);
-            //System.out.print("\n\"" + term + "\": ");
             
             // *** dft
-            postingsStream.writeInt(postings.size());
-            //System.out.print("dft: " + postings.size() + " | ");
+            int dft = postings.size();
+            postingsStream.writeInt(dft);
+            //System.out.print("dft: " + dft + "\n");
             
             // Starting pos of term for table
             Long postingPos = fileStream.getChannel().size() - 4; 
             result.add(postingPos);
-            //System.out.print(" (pos: " + postingPos + ")");
             
             // *** id_d
             int prevId = 0; // for gap
@@ -63,26 +61,27 @@ public class DiskIndexWriter {
                 int docId = doc.getDocumentId();
                 
                 postingsStream.writeInt(docId - prevId);
-                //System.out.print("\n\tid_d: " + (docId - prevId) + " | ");
+                //System.out.print("\t\tDocID: " + (docId - prevId));
                 prevId = docId;
                 
                 
                 List<Integer> positions = doc.getPositions();
                 
                 // *** tf_t
+                int tft = positions.size();
                 postingsStream.writeInt(positions.size());
-                //System.out.print("\n\t\ttf_t: " + positions.size() + " | ");
+                //System.out.print(" | tft: " + tft + "\n");
                 
                 // *** pi
                 int prevPos = 0; // for gap
                 //int ctr = 0;
                 for (Integer pos: positions) {
                     postingsStream.writeInt(pos - prevPos);
-                    //System.out.print("p_" + ctr + ": " + (pos - prevPos) + " ");
                     prevPos = pos;
                     //ctr++;
                 }
             }
+            
             postingsStream.flush();
         }
         
@@ -103,23 +102,16 @@ public class DiskIndexWriter {
         // Create directory
         binVocab.getParentFile().mkdirs();
         
-        if (binVocab.exists()) {
-            //System.out.println("vocab.bin already exsits");
-            return result;
-        }
-        
         // Set File stream vars
         FileOutputStream fileStream = new FileOutputStream(binVocab);
         DataOutputStream vocabStream = new DataOutputStream(fileStream);
         
         for (String term: index.getVocabulary()) {
-            //System.out.print("\n\"" + term + "\": ");
             // Writes term in binary format
-            vocabStream.writeBytes(term);
+            vocabStream.write(term.getBytes("UTF-8"));
             
             // Starting pos of term for table
-            Long vocabPos = fileStream.getChannel().size() - term.length();
-            //System.out.print(vocabPos + "\n");
+            Long vocabPos = fileStream.getChannel().size() - term.getBytes("UTF-8").length;
             result.add(vocabPos);
             vocabStream.flush();
         }
@@ -129,20 +121,14 @@ public class DiskIndexWriter {
         return result;
     }
     
-    
     // Write Vocab Table
-    public void writeTable(List<Long> postingsPos, List<Long> vocabPos, Path path) throws FileNotFoundException, IOException {
-        ArrayList<Long> result = new ArrayList<>();
+    private void writeTable(List<Long> postingsPos, List<Long> vocabPos, Path path) throws FileNotFoundException, IOException {
         
         // Output file
         File binTable = new File(String.valueOf(path) + "\\index\\vocabTable.bin");
         // Create directory
         binTable.getParentFile().mkdirs();
         
-        if (binTable.exists()) {
-            //System.out.println("vocabTable.bin already exsits");
-            return;
-        }
         
         // Set File stream vars
         FileOutputStream fileStream = new FileOutputStream(binTable);
@@ -150,7 +136,6 @@ public class DiskIndexWriter {
         
         // Write [ vocab pos ] [ posting pos]
         for (int i = 0; i < postingsPos.size(); i++) {
-            //System.out.println("Vocab: " + vocabPos.get(i) + " | Postings: " + postingsPos.get(i));
             tableStream.writeLong(vocabPos.get(i));
             tableStream.writeLong(postingsPos.get(i));
             tableStream.flush();
@@ -158,5 +143,43 @@ public class DiskIndexWriter {
         
         tableStream.close();
         fileStream.close();
+    }
+
+    private void writeWeight(Index index, Path path) throws FileNotFoundException, IOException {
+        // Output file
+        File binWeights = new File(String.valueOf(path) + "\\index\\docWeights.bin");
+        // Create directory
+        binWeights.getParentFile().mkdirs();
+        
+        // Set File stream vars
+        FileOutputStream fileStream = new FileOutputStream(binWeights);
+        DataOutputStream weightsStream = new DataOutputStream(fileStream);
+        
+        // get weights
+        List<Double> mDocWeights = index.getWeights();
+        
+        //int doc_id = 0;
+        for (Double weight: mDocWeights) {
+            //System.out.println("Doc: " + doc_id + " L_d:" + weight);
+            weightsStream.writeDouble(weight);
+            weightsStream.flush();
+        }
+        
+        weightsStream.close();
+        fileStream.close();
+    }
+    
+    // Verify if files exist
+    public boolean exists(Path path) {
+        
+        File binPostings = new File(String.valueOf(path) + "\\index\\postings.bin");
+        File binVocab = new File(String.valueOf(path) + "\\index\\vocab.bin");
+        File binTable = new File(String.valueOf(path) + "\\index\\vocabTable.bin");
+        File binWeights = new File(String.valueOf(path) + "\\index\\docWeights.bin");
+        
+        return (binPostings.exists() 
+                && binVocab.exists() 
+                && binTable.exists() 
+                && binWeights.exists());
     }
 }

@@ -64,6 +64,7 @@ public class DirectoryCorpus implements DocumentCorpus {
             result.put(nextId, mFactories.get(getFileExtension(file)).createFileDocument(file, nextId));
             nextId++;
         }
+        
         return result;
     }
 
@@ -140,6 +141,9 @@ public class DirectoryCorpus implements DocumentCorpus {
         return mDocuments.get(id);
     }
 
+    public double getFileSize(int id) {
+        return mDocuments.get(id).getByeSize();
+    }
     /**
      * Registers a factory method for loading documents of the given file
      * extension. By default, a corpus does not know how to load any files --

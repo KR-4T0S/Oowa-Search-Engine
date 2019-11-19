@@ -29,7 +29,7 @@ public class TermLiteral implements QueryComponent {
         List<Posting> result = new ArrayList();
 
         for (String s : processor.processToken(mTerm)) {
-            result = unionMergePostings(index.getPostings(s), result);
+            result = unionMergePostings(index.getNonPositionalPostings(s), result);
         }
 
         return result;
@@ -75,10 +75,12 @@ public class TermLiteral implements QueryComponent {
         return result;
     }
 
+    @Override
     public void setPositive(boolean value) {
         mIsPositive = value;
     }
     
+    @Override
     public boolean isPositive() {
         return mIsPositive;
     }

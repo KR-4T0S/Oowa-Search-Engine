@@ -2,7 +2,10 @@ package unittesting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.PriorityQueue;
 import org.tartarus.snowball.SnowballStemmer;
 import org.tartarus.snowball.ext.englishStemmer;
 
@@ -12,9 +15,22 @@ public class UnitTesting {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        String str = "Commerce-(715)";
-
-        System.out.println(processToken(str));
+        PriorityQueue<Integer> pQueue =  new PriorityQueue<Integer>(Collections.reverseOrder());
+        
+        // Adding items to the pQueue using add() 
+        pQueue.add(42); 
+        pQueue.add(88); 
+        pQueue.add(12); 
+        pQueue.add(7774);
+        pQueue.add(23); 
+        pQueue.add(445); 
+        pQueue.add(12); 
+        pQueue.add(664);
+        
+        System.out.println("The queue elements:"); 
+        Iterator itr = pQueue.iterator(); 
+        while (itr.hasNext()) 
+            System.out.println(itr.next()); 
     }
 
     private static List<String> processToken(String token) {

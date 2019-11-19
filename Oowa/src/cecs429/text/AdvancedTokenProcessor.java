@@ -78,8 +78,8 @@ public class AdvancedTokenProcessor implements TokenProcessor {
         int stopLeft = 0;
         for (int i = 0; i < str.length(); i++) {
             // stop once first alphanum character is found
-            if (Character.isLetter(str.charAt(i))
-                    || Character.isDigit(str.charAt(i))) {
+            if (Character.isLetterOrDigit(str.charAt(i))
+                    /*|| Character.isDigit(str.charAt(i))*/) {
                 break;
             } else {
                 stopLeft++;

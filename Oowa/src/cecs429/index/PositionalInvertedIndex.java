@@ -5,6 +5,7 @@
  */
 package cecs429.index;
 
+import cecs429.documents.DocumentCorpus;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,10 +20,14 @@ import java.util.Map;
 public class PositionalInvertedIndex implements Index {
 
     private final Map<String, LinkedList<Posting>> mIndex;
+    private final Map<Integer, Map<String, Integer>> mDocTermFrequencies;
+    private final DocumentCorpus mCorpus;
 
     // Constructor
-    public PositionalInvertedIndex() {
+    public PositionalInvertedIndex(DocumentCorpus corpus) {
         mIndex = new HashMap<>();
+        mDocTermFrequencies = new HashMap<>();
+        mCorpus = corpus;
     }
 
     @Override
@@ -33,31 +38,53 @@ public class PositionalInvertedIndex implements Index {
             return result;  // Returns term if it's indexed.
         }
         
-        return result = new ArrayList<>(); // Returns empty list otherwise
+        return result = new ArrayList(); // Returns empty list otherwise
     }
 
     public void addTerm(List<String> terms, int documentId, int pos) {
         for (String term : terms) {
             // Since it's sequential, we're never returning to the same 
             // doc again in the future. LinkedList helps do O(1)
-            if (mIndex.containsKey(term)) {
+            if (mIndex.containsKey(term)) { // Term is already indexed
                 // Still working on existing document
                 if (mIndex.get(term).getLast().getDocumentId() == documentId) {
                     mIndex.get(term).getLast().addPos(pos);
+
                 } else { // New document, new posting
                     mIndex.get(term).add(new Posting(documentId));
                     mIndex.get(term).getLast().addPos(pos);
                 }
             } else {
                 // Term hasn't been indexed, add with new LinkedList as object
+                // new document, new posting
                 LinkedList<Posting> postings = new LinkedList<>();
                 postings.add(new Posting(documentId));
                 mIndex.put(term, postings);
                 mIndex.get(term).getLast().addPos(pos);
             }
+
+            // Now Term Frequency
+            // Document exists
+            if (mDocTermFrequencies.containsKey(documentId)) {
+                // Document has term
+                if (mDocTermFrequencies.get(documentId).containsKey(term)) {
+                    Map<String, Integer> freqs =  mDocTermFrequencies.get(documentId);
+                    int tft = mIndex.get(term).getLast().getTftd();
+                    freqs.replace(term, tft);
+                    mDocTermFrequencies.replace(documentId, freqs);
+                } else { // Term is new in doc
+                    Map<String, Integer> freqs =  mDocTermFrequencies.get(documentId);
+                    freqs.put(term, 1);
+                    mDocTermFrequencies.replace(documentId, freqs);
+                }
+            } else { // New document, new term/tft
+                Map<String, Integer> newFreq = new HashMap();
+                newFreq.put(term, 1);
+                mDocTermFrequencies.put(documentId, newFreq);
+            }
         }
     }
-
+    
     @Override
     public List<String> getVocabulary() {
         // O(1)
@@ -70,4 +97,133 @@ public class PositionalInvertedIndex implements Index {
         // O(1) * O(n*logn) =  O(n*logn)
         return result;
     }
+
+    @Override
+    public List<Double> getWeights() {
+        List<Double> result = new ArrayList();
+        
+        /* TEMP (?) */
+        double docLength_A = 0; // docLength_A
+        /* TEMP (?) */
+        
+        // For each doc
+        // Set to compare with DocId 0
+        int prev = -1; // dealing with empty bodies. (isn't in keyset)
+        for (Integer keyMapDocs: mDocTermFrequencies.keySet()) {
+            // Fills in weights for empty files
+            while(keyMapDocs - prev != 1) {
+                result.add((double) 0); // docWeights_d
+                result.add((double) 0); // docLength_d
+                result.add((double) 0); // byteSize_d;
+                result.add((double) 0); // avg(tf_td);
+                prev++;
+            } 
+            
+            double docLength_d = 0;
+            double sum_tf_td = 0;
+            
+            // w_dt and add to sum
+            // For each term
+            double w_dt_sums = 0;
+            for (String keyMapFreqs: mDocTermFrequencies.get(keyMapDocs).keySet()) {
+                // w_dt = 1 + ln(tf_td)
+                double w_dt = 1 + Math.log(mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs));
+                // (wdt^2)
+                w_dt_sums +=  w_dt * w_dt;
+                
+                docLength_d += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
+                docLength_A += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
+                sum_tf_td += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
+            }
+            
+            double L_d = Math.sqrt(w_dt_sums);
+            double avg_tf_td = sum_tf_td / mDocTermFrequencies.get(keyMapDocs).keySet().size();
+            double byteSize_d = mCorpus.getFileSize(keyMapDocs);
+            
+            result.add(L_d); // docWeights_d
+            result.add(docLength_d); // docLength_d
+            result.add(byteSize_d); // byteSize_d
+            result.add(avg_tf_td);  // avg(tftd)
+            
+            //System.out.println("\tDoc(" + keyMapDocs + "):");
+            //System.out.println("\t\tdocWeight: " + L_d);
+            //System.out.println("\t\tdocLength: " + docLength_d);
+            //System.out.println("\t\tdocByteSize: " + byteSize_d);
+            //System.out.println("\t\tavgTftd: " + avg_tf_td);
+            
+            prev = keyMapDocs;
+        }
+        
+        docLength_A = (double) docLength_A / (double) (mDocTermFrequencies.keySet().size());
+        //System.out.println("AvgDocLength" + docLength_A);
+        
+        result.add(docLength_A);
+
+        
+        return result; 
+    }
+    
+    @Override
+    public double getWeightDefault(int docId) {
+        double w_dt_sums = 0;
+        
+        // w_dt and add to sum
+        for (String keyMapFreqs: mDocTermFrequencies.get(docId).keySet()) {
+            double w_dt = 1 + Math.log(mDocTermFrequencies.get(docId).get(keyMapFreqs));
+            w_dt_sums +=  Math.pow(w_dt, 2);
+        }
+            
+        return Math.sqrt(w_dt_sums);
+    }
+    
+    @Override
+    public double getDocLength(int docId) {
+        double docLength = 0;
+        
+        for (String keyMapFreqs: mDocTermFrequencies.get(docId).keySet()) {
+            docLength += mDocTermFrequencies.get(docId).get(keyMapFreqs);
+        }
+        
+        return docLength;
+    }
+
+    @Override
+    public double getDocByteSize(int docId) {
+        return mCorpus.getFileSize(docId);
+    }
+
+    @Override
+    public double getAvgTftd(int docId) {
+        double tf_td = 0;
+        
+        for (String keyMapFreqs: mDocTermFrequencies.get(docId).keySet()) {
+            tf_td += mDocTermFrequencies.get(docId).get(keyMapFreqs);
+        }
+        
+        return tf_td / mDocTermFrequencies.get(docId).keySet().size();
+    }
+
+    @Override
+    public double getAvgDocLength() {
+        double docLengthSum = 0;
+        
+        for (Integer keyMapDocs: mDocTermFrequencies.keySet()) {
+            for (String keyMapFreqs: mDocTermFrequencies.get(keyMapDocs).keySet()) {
+                docLengthSum += mDocTermFrequencies.get(keyMapDocs).get(keyMapFreqs);
+            }
+        }
+        
+        return docLengthSum / (double) mDocTermFrequencies.keySet().size();
+    }
+    
+    @Override
+    public List<Posting> getNonPositionalPostings(String term) {
+        return getPostings(term);
+    }
+
+    @Override
+    public int getTermCount() {
+        return mIndex.keySet().size();
+    }
+
 }
