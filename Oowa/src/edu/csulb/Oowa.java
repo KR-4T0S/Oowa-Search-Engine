@@ -19,7 +19,7 @@ public class Oowa {
     
     // Integer Constants
     public static final int MAX_VOCAB = 1000;
-    public static final int MAX_RANKED_RESULTS = 10;
+    public static final int MAX_RANKED_RESULTS = 50;
     public static final int MAX_DOC_LINE_SIZE = 100;
     
     // String Constants
