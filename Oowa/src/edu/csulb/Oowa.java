@@ -4,6 +4,8 @@ import cecs429.documents.*;
 import cecs429.index.*;
 import cecs429.text.*;
 import cecs429.query.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -70,7 +72,7 @@ public class Oowa {
         Scanner inputQuery = new Scanner(System.in);
         
         // Prompt for Indexing Mode
-        System.out.print("Start [ 1 = Build Index | 2 = Query Index ]: ");
+        System.out.print("Start [ 1 = Build Index | 2 = Query Index | 3 = MAP ]: ");
         modeIndex = inputModeIndex.nextLine();
 
         DocumentCorpus corpus = DirectoryCorpus.loadTextDirectory(Paths.get(directory), ".json");
@@ -78,7 +80,7 @@ public class Oowa {
         
         if (modeIndex.equals("1")) {
             index = startIndex(corpus, Paths.get(directory));
-        } else {
+        } else if (modeIndex.equals("2")) {
             index = new DiskPositionalIndex(directory);
             
             // Prompt for Querying Mode
@@ -158,6 +160,8 @@ public class Oowa {
                     }
                 }
             } while (!query.equals(":q"));
+        } else {
+            MAP(index, corpus, directory);
         }
         
     }
@@ -183,9 +187,6 @@ public class Oowa {
                     System.out.print("\n\t");
                     System.out.format("%-12s", "[ID:" + p.getDocumentId() + "] ");
                     System.out.print(corpus.getDocument(p.getDocumentId()).getTitle());
-//                    System.out.println("\t[ID:" + p.getDocumentId() + "] " c
-//                            + corpus.getDocument(p.getDocumentId()).getTitle()
-//                    );
                 }
 
                 System.out.println("\n\nTotal Results: " + counter + "\n\n");
@@ -244,11 +245,6 @@ public class Oowa {
                     System.out.print(corpus.getDocument(p.getDocumentId()).getTitle()
                                 + ": "
                                 + acc.getScore());
-//                    System.out.println("\t[ID:" + p.getDocumentId() + "] " 
-//                            + corpus.getDocument(p.getDocumentId()).getTitle()
-//                            + ": "
-//                            + acc.getScore()
-//                    );
                 }
                 
                 System.out.println("\n\nTotal Results: " + K + "\n\n");
@@ -355,6 +351,64 @@ public class Oowa {
         }
 
         return invertedIndex;
+    }
+    
+    private static void MAP(Index index, DocumentCorpus corpus, String directory) {
+        TokenProcessor tokenProcessor = new SimpleTokenProcessor();
+        
+        // TODO: Read /relevance/queries
+        //      Extract queries, line by line
+        try {
+            BufferedReader queryReader = new BufferedReader(
+                    new FileReader(directory + "/relevance/queries"));
+            BufferedReader relevanceReader = new BufferedReader(
+                    new FileReader(directory + "/relevance/qrel"));
+            
+            String query = queryReader.readLine();
+            String relevance = relevanceReader.readLine();
+            while (query != null && relevance != null) {
+                System.out.println("Query: " + query);
+                System.out.println("\tRelevances: " + relevance);
+                
+                // TODO: Split query to pass to context
+                String[] terms = query.split("\\s+");
+                
+                // TODO: For Each Ranking Formula
+                //      TODO: Find query results
+                
+                
+                //      TODO: Calculate MAP (Chapter 8)
+                //          TODO: Average Precision for query
+                            /**
+                             *                                 (for each i in Results)
+                             *      AP (q) = (1/|Total Relevant|) *     Sum(relevant (i) * P@i)
+                             *                                          i=1
+                             *      
+                             *                  relevant(i): returns 1 iff doc(i) is relevant
+                             *                                  i,e Results[i] exists in REL
+                             *                  returns 0 otherwise
+                             * 
+                             *                  P@i = | Results[1...i] ∩ REL | / i
+                             */
+                            
+                //          TODO: MAP 
+                            /**
+                             *                        (for each q in Q)
+                             *      MAP (Q) = (1/|Q|) *   Sum(AP(q))
+                             *                         
+                             */
+                
+                //      TODO: Mean Response Time
+                //          Response Time = Time@Results - Time@QueryStart
+                
+                //      TODO: Throughput (queries/second)
+                
+                query = queryReader.readLine();
+                relevance = relevanceReader.readLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static String stemmer(String str) {
