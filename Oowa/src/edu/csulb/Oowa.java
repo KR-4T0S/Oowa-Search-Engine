@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Scanner;
@@ -36,6 +38,7 @@ public class Oowa {
     public static final String ANSI_WHITE = "\u001B[37m";
     public static final String ANSI_ITALIC = "\u001B[3m";
     public static final String ANSI_BOLD = "\u001B[1m";
+    
     public static final String QUERY_MODE_BOOLEAN = "1";
     public static final String QUERY_MODE_RANKED = "2";
     public static final String WEIGHT_DEFAULT = "1";
@@ -161,6 +164,7 @@ public class Oowa {
                 }
             } while (!query.equals(":q"));
         } else {
+            index = new DiskPositionalIndex(directory);
             MAP(index, corpus, directory);
         }
         
@@ -354,63 +358,183 @@ public class Oowa {
     }
     
     private static void MAP(Index index, DocumentCorpus corpus, String directory) {
-        TokenProcessor tokenProcessor = new SimpleTokenProcessor();
-        
-        // TODO: Read /relevance/queries
-        //      Extract queries, line by line
-        try {
-            BufferedReader queryReader = new BufferedReader(
-                    new FileReader(directory + "/relevance/queries"));
-            BufferedReader relevanceReader = new BufferedReader(
-                    new FileReader(directory + "/relevance/qrel"));
+        // TODO: For Each Ranking Formula
+        String[] formulas = {WEIGHT_DEFAULT, WEIGHT_TRADITIONAL, WEIGHT_OKAPI, WEIGHT_WACKY};
+        System.out.println("Formulas: (1) Default | (2) Tradiational | (3) Okapi | (4) Wacky");
+        for (String formula: formulas) {
+            System.out.println(ANSI_RED + "MAP Mode: "+ ANSI_RESET + formula);
+            double AP_q_sum = 0;
+            int qCount = 0;
+            long responseTime_sum = 0;
             
-            String query = queryReader.readLine();
-            String relevance = relevanceReader.readLine();
-            while (query != null && relevance != null) {
-                System.out.println("Query: " + query);
-                System.out.println("\tRelevances: " + relevance);
+            try {
+                BufferedReader queryReader = new BufferedReader(
+                        new FileReader(directory + "/relevance/queries"));
+                BufferedReader relevanceReader = new BufferedReader(
+                        new FileReader(directory + "/relevance/qrel"));
+
+                String query = queryReader.readLine();
+                String relevance = relevanceReader.readLine();
                 
-                // TODO: Split query to pass to context
-                String[] terms = query.split("\\s+");
-                
-                // TODO: For Each Ranking Formula
-                //      TODO: Find query results
-                
-                
-                //      TODO: Calculate MAP (Chapter 8)
-                //          TODO: Average Precision for query
-                            /**
-                             *                                 (for each i in Results)
-                             *      AP (q) = (1/|Total Relevant|) *     Sum(relevant (i) * P@i)
-                             *                                          i=1
-                             *      
-                             *                  relevant(i): returns 1 iff doc(i) is relevant
-                             *                                  i,e Results[i] exists in REL
-                             *                  returns 0 otherwise
-                             * 
-                             *                  P@i = | Results[1...i] ∩ REL | / i
-                             */
-                            
-                //          TODO: MAP 
-                            /**
-                             *                        (for each q in Q)
-                             *      MAP (Q) = (1/|Q|) *   Sum(AP(q))
-                             *                         
-                             */
-                
-                //      TODO: Mean Response Time
-                //          Response Time = Time@Results - Time@QueryStart
-                
-                //      TODO: Throughput (queries/second)
-                
-                query = queryReader.readLine();
-                relevance = relevanceReader.readLine();
+                // for every query.
+                while (query != null && relevance != null) {
+                    qCount++;
+                    //System.out.println("Query: " + query);
+                    
+                    // Establish relevances
+                    String[] ids = relevance.split("\\s+");
+                    HashSet relIds = new HashSet(ids.length); // because we don't want to iterate through this every time
+                    for (int i = 0; i < ids.length; i++) {
+                        relIds.add(Integer.parseInt(ids[i]));
+                    }
+//                    System.out.println("\tRelevances: " + relIds);
+
+                    //      TODO: Find query results
+                    double startTimeQuery = System.currentTimeMillis();
+                    List<Posting> results = getResultsRankedMAP(query, index, corpus, formula);
+                    double endTimeQuery = System.currentTimeMillis();
+//                    System.out.print("\tResults: ");
+//                    for (Posting p: results) {
+//                        System.out.print(corpus.getDocument(p.getDocumentId()).getFileID() + ", ");
+//                    }
+//                    System.out.println();
+                    
+                    
+                    double responseTimeQuery = endTimeQuery - startTimeQuery;
+                    responseTime_sum += responseTimeQuery;
+
+                    /**
+                     *                           (for each i in Results)
+                     *  AP (q) = (1/|REL|) *     Sum(relevant (i) * P@i)
+                     *                           i=1
+                     *      
+                     *  relevant(i):    returns 1 iff doc(i) is relevant
+                     *                  returns 0 otherwise
+                     * 
+                     *  P@i = | Results[1...i] ∩ REL | / i
+                     */
+                    double relSum = 0;
+                    int relCount = 0;
+                    int i = 1;
+                    for (Posting p: results) {
+                        // 2 Doc IDS
+                        // Runtime ID: automatically generated by program
+                        // File ID: grabbed from file 'id' field.
+                        //      this is the id we need to compare with the rel file
+                        if (relevant(corpus.getDocument(p.getDocumentId()).getFileID(), relIds) == 1) {
+                            //System.out.println("\t\t\tRelevant: " + corpus.getDocument(p.getDocumentId()).getFileID() + ".json at index " + i);
+                            relCount++;
+                            double PatI = relCount / i;
+                            //         relevant (i)                        * P@i
+                            relSum += (1.0 * PatI);
+                        }
+                        i++;
+                    }
+                    
+                    /**
+                     * TODO: Confirm whether AP_q formula uses 
+                     *      1 / TOTAL RELEVANT
+                     *          or 
+                     *      1 / RETRIEVED RELEVANT
+                     */
+                    //            (1 / |REL|        ) * Sum(relevant (i) * P@i)
+//                    double AP_q = 0;
+//                    if (relCount != 0) {
+//                        AP_q = ( 1.0 / relCount ) * relSum;
+//                    }
+
+                    double AP_q = ( 1.0 / ids.length ) * relSum;
+                    //System.out.println("\t\tAP(q): " + "1 / " + relCount + " * " + relSum + " = "+ AP_q);
+                    //System.out.println("\t\tResponse Time: " + responseTimeQuery + " ms");
+                    
+                    // Add to sum for MAP
+                    AP_q_sum += AP_q;
+                    
+                    // Next Query
+                    query = queryReader.readLine();
+                    relevance = relevanceReader.readLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            
+            //          TODO: MAP 
+            /**
+             *                        (for each q in Q)
+             *      MAP (Q) = (1/|Q|) *   Sum(AP(q))
+             *                         
+             */
+            double MAP = (1.0 / qCount) * AP_q_sum;
+            System.out.println(ANSI_RED + "\tMAP: " + ANSI_RESET + MAP);
+
+            //      TODO: Mean Response Time
+            //          Response Time = Time@Results - Time@QueryStart
+            double MRT = (double) (responseTime_sum) / (double) (qCount);
+            System.out.println(ANSI_RED + "\tMRT: " + ANSI_RESET + MRT + " ms");
+            
+            //      TODO: Throughput (queries/second)
+            double throughput = 1.0 / (MRT / 1000);
+            System.out.println(ANSI_RED + "\tThroughput: " + ANSI_RESET + throughput + " q/s");
+            
         }
     }
+    
+    private static int relevant(int i, HashSet rel) {
+        int result = 0;
+        
+        if (rel.contains(i)) {
+            result = 1;
+        }
+        
+        return result;
+    }
+    
+    private static List<Posting> getResultsRankedMAP(String query, Index index, DocumentCorpus corpus, String weightMode) {
+        List<Posting> result = new ArrayList();
+        
+        TokenProcessor tokenProcessor = new SimpleTokenProcessor();
+        WeightStrategy strategy = null;
 
+        // Just consider terms by space character.
+        String[] terms = query.split("\\s+");
+
+        // Heap for results.
+        PriorityQueue<Accumulator> results = new PriorityQueue(); 
+        
+        // Use strategy depending on weightMode param
+        switch(weightMode) {
+            case (WEIGHT_TRADITIONAL):
+                strategy = new OperationWeightTFIDF();
+                break;
+            case (WEIGHT_OKAPI):
+                strategy = new OperationWeightOkapi();
+                break;
+            case (WEIGHT_WACKY):
+                strategy = new OperationWeightWacky();
+                break;
+            default:
+                strategy = new OperationWeightDefault();               
+        }
+        
+        try {
+            WeightStrategyContext context = new WeightStrategyContext(strategy);
+            results = context.get(index, tokenProcessor, corpus.getCorpusSize(), terms);
+            
+            // Either print MAX results if heap has that or more.
+            // or just as many results as heap contains.
+            int K = Math.min(MAX_RANKED_RESULTS, results.size());
+            for (int i = 0; i < K; i++) {
+                Accumulator acc = results.poll(); // Pop and Get greatest value from heap.
+                Posting p = acc.getPosting(); // Retrieve Posting from the Accumulator
+                result.add(p);
+            }
+        } catch (Exception e) {
+            System.out.println("\u001B[31m" + e + "\u001B[0m");
+        }
+        
+        return result;
+    }
+    
     private static String stemmer(String str) {
         SnowballStemmer snowballStemmer = new englishStemmer();
         snowballStemmer.setCurrent(str);
