@@ -23,7 +23,7 @@ public class Oowa {
     
     // Integer Constants
     public static final int MAX_VOCAB = 1000;
-    public static final int MAX_RANKED_RESULTS = 50;
+    public static final int MAX_RANKED_RESULTS = 80;
     public static final int MAX_DOC_LINE_SIZE = 100;
     
     // String Constants
@@ -379,7 +379,7 @@ public class Oowa {
                 // for every query.
                 while (query != null && relevance != null) {
                     qCount++;
-                    //System.out.println("Query: " + query);
+                    System.out.println("Query: " + query);
                     
                     // Establish relevances
                     String[] ids = relevance.split("\\s+");
@@ -422,10 +422,9 @@ public class Oowa {
                         // File ID: grabbed from file 'id' field.
                         //      this is the id we need to compare with the rel file
                         if (relevant(corpus.getDocument(p.getDocumentId()).getFileID(), relIds) == 1) {
-                            //System.out.println("\t\t\tRelevant: " + corpus.getDocument(p.getDocumentId()).getFileID() + ".json at index " + i);
+                            System.out.println("\t\t\tRelevant: " + corpus.getDocument(p.getDocumentId()).getFileID() + ".json at index " + i);
                             relCount++;
                             double PatI = relCount / i;
-                            //         relevant (i)                        * P@i
                             relSum += (1.0 * PatI);
                         }
                         i++;
@@ -444,8 +443,8 @@ public class Oowa {
 //                    }
 
                     double AP_q = ( 1.0 / ids.length ) * relSum;
-                    //System.out.println("\t\tAP(q): " + "1 / " + relCount + " * " + relSum + " = "+ AP_q);
-                    //System.out.println("\t\tResponse Time: " + responseTimeQuery + " ms");
+                    System.out.println("\t\tAP(q): " + "1 / " + ids.length + " * " + relSum + " = "+ AP_q);
+                    System.out.println("\t\tResponse Time: " + responseTimeQuery + " ms");
                     
                     // Add to sum for MAP
                     AP_q_sum += AP_q;
