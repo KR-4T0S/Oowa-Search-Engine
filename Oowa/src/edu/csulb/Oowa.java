@@ -24,9 +24,11 @@ public class Oowa {
     // Integer Constants
     public static final int INDEX_AVG_PRECISION = 0;
     public static final int INDEX_RESPONSE_TIME = 1;
+    
     public static final int MAX_VOCAB = 1000;
     public static final int MAX_RANKED_RESULTS = 50;
     public static final int MAX_DOC_LINE_SIZE = 100;
+    public static final int RATE_MS_TO_SEC = 1000;
     
     // String Constants
     public static final String ANSI_RESET = "\u001B[0m";
@@ -47,6 +49,8 @@ public class Oowa {
     public static final String WEIGHT_TRADITIONAL = "2";
     public static final String WEIGHT_OKAPI = "3";
     public static final String WEIGHT_WACKY = "4";
+    public static final String[] WEIGHT_MODES = {WEIGHT_DEFAULT, WEIGHT_TRADITIONAL, WEIGHT_OKAPI, WEIGHT_WACKY};
+    public static final String[] WEIGHT_MODES_NAMES = {"Default", "Traditional", "Okapi", "Wacky"};
     
 
     public static void main(String[] args) throws IOException {
@@ -107,7 +111,7 @@ public class Oowa {
                     System.out.println("\n[" + ANSI_RED + ":w " + ANSI_RESET
                             + ANSI_BOLD + "[1 = Default | 2 = tf-idf | 3 = Okapi BM25 | 4 = Wacky] " + ANSI_RESET
                         + " → Change weight scheme] ");
-                    System.out.println("Current Weight Scheme: " + weightMode);
+                    System.out.println("Current Weight Scheme: " + WEIGHT_MODES_NAMES[Integer.parseInt(weightMode) - 1]);
                 }
 
                 // Start prompt for word
@@ -159,6 +163,9 @@ public class Oowa {
                             if (choiceCommand.equals(":w")) {
                                 choiceParameter = query.substring(query.indexOf(' ') + 1);
                                 weightMode = choiceParameter;
+                                if (Integer.parseInt(weightMode) > 4) {
+                                    weightMode = WEIGHT_DEFAULT;
+                                }
                             } else { // Get results given current weight mode.
                                 getResultsRanked(query, index, corpus, weightMode);
                             }
@@ -361,9 +368,7 @@ public class Oowa {
     }
     
     private static void MAP(Index index, DocumentCorpus corpus, String directory) {
-        String[] weightModes = {WEIGHT_DEFAULT, WEIGHT_TRADITIONAL, WEIGHT_OKAPI, WEIGHT_WACKY};
-        String[] weightNames = {"Default", "Traditional", "Okapi", "Wacky"};
-        double[][] result = new double[weightModes.length][2];
+        double[][] result = new double[WEIGHT_MODES.length][2];
         
         double qCount = 0;
         try {
@@ -378,7 +383,7 @@ public class Oowa {
             // for every query.
             while (query != null && relevance != null) {
                 qCount++;
-                System.out.println("Query: " + query);
+                System.out.println( qCount + ". " + query);
 
                 // Establish relevances
                 String[] ids = relevance.split("\\s+");
@@ -389,7 +394,7 @@ public class Oowa {
                 //System.out.println("\tRelevances: " + relIds);
 
                 int mode = 0;
-                for (String weightMode: weightModes) {
+                for (String weightMode: WEIGHT_MODES) {
                     AveragePrecision AP = new AveragePrecision(query, index, corpus, weightMode, relIds);
                     double AP_q = AP.getAveragePrecision();
                     double responseTime_q = AP.getResponseTime();
@@ -410,9 +415,10 @@ public class Oowa {
             e.printStackTrace();
         }
         
+        // Print out results after querying logging.
         System.out.println();
-        for (int i = 0; i < weightModes.length; i++) {
-            System.out.println("Mode " + weightNames[i]);
+        for (int i = 0; i < WEIGHT_MODES.length; i++) {
+            System.out.println("Mode " + WEIGHT_MODES_NAMES[i]);
             // MAP = (1/|Q|) *   Sum(AP(q))
             double MAP = (1.0 / qCount) * result[i][INDEX_AVG_PRECISION];
             System.out.println(ANSI_RED + "\tMAP: " + ANSI_RESET + MAP);
@@ -421,68 +427,9 @@ public class Oowa {
             double MRT = (double) (result[i][INDEX_RESPONSE_TIME]) / (double) (qCount);
             System.out.println(ANSI_RED + "\tMRT: " + ANSI_RESET + MRT + " ms");
 
-            double throughput = 1.0 / (MRT / 1000);
+            double throughput = 1.0 / (MRT / RATE_MS_TO_SEC);
             System.out.println(ANSI_RED + "\tThroughput: " + ANSI_RESET + throughput + " q/s");
         }
-        
-//        System.out.println("Formulas: (1) Default | (2) Tradiational | (3) Okapi | (4) Wacky");
-//        for (String weightMode: weightModes) {
-//            System.out.println(ANSI_RED + "MAP Mode: "+ ANSI_RESET + weightMode);
-//            double AP_q_sum = 0;
-//            int qCount = 0;
-//            long responseTime_sum = 0;
-//            
-//            try {
-//                BufferedReader queryReader = new BufferedReader(
-//                        new FileReader(directory + "/relevance/queries"));
-//                BufferedReader relevanceReader = new BufferedReader(
-//                        new FileReader(directory + "/relevance/qrel"));
-//
-//                String query = queryReader.readLine();
-//                String relevance = relevanceReader.readLine();
-//                
-//                // for every query.
-//                while (query != null && relevance != null) {
-//                    qCount++;
-//                    //System.out.println("Query: " + query);
-//                    
-//                    // Establish relevances
-//                    String[] ids = relevance.split("\\s+");
-//                    HashSet relIds = new HashSet(ids.length); // because we don't want to iterate through this every time
-//                    for (int i = 0; i < ids.length; i++) {
-//                        relIds.add(Integer.parseInt(ids[i]));
-//                    }
-//                    //System.out.println("\tRelevances: " + relIds);
-//
-//                    AveragePrecision AP = new AveragePrecision(query, index, corpus, weightMode, relIds);
-//                    double AP_q = AP.getAveragePrecision();
-//                    double responseTime_q = AP.getResponseTime();
-//                    System.out.println("\t\tAP: " + AP_q);
-//                    System.out.println("\t\tResponse Time: " + responseTime_q);
-//                    
-//                    
-//                    AP_q_sum += AP_q;
-//                    responseTime_sum += responseTime_q;
-//                    
-//                    // Next Query
-//                    query = queryReader.readLine();
-//                    relevance = relevanceReader.readLine();
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            
-//            // MAP = (1/|Q|) *   Sum(AP(q))
-//            double MAP = (1.0 / qCount) * AP_q_sum;
-//            System.out.println(ANSI_RED + "\tMAP: " + ANSI_RESET + MAP);
-//
-//            // Response Time = Time@Results - Time@QueryStart
-//            double MRT = (double) (responseTime_sum) / (double) (qCount);
-//            System.out.println(ANSI_RED + "\tMRT: " + ANSI_RESET + MRT + " ms");
-//            
-//            double throughput = 1.0 / (MRT / 1000);
-//            System.out.println(ANSI_RED + "\tThroughput: " + ANSI_RESET + throughput + " q/s");
-//        }
     }
     
     private static String stemmer(String str) {
