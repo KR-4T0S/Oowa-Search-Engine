@@ -22,15 +22,19 @@ import org.tartarus.snowball.ext.englishStemmer;
 public class Oowa {
     
     // Integer Constants
+    //      Meta Consts
     public static final int INDEX_AVG_PRECISION = 0;
     public static final int INDEX_RESPONSE_TIME = 1;
     
-    public static final int MAX_VOCAB = 1000;
-    public static final int MAX_RANKED_RESULTS = 50;
-    public static final int MAX_DOC_LINE_SIZE = 100;
-    public static final int RATE_MS_TO_SEC = 1000;
+    //      Non-Meta Consts
+    public static final int MAX_VOCAB = 1000; // Total Vocab to Print
+    public static final int MAX_RANKED_RESULTS_MAP = 50; // Max # of results for MAP
+    public static final int MAX_RANKED_RESULTS = 10; // Max # of results for ranked query
+    public static final int MAX_DOC_LINE_SIZE = 100; // Max # of characters per line when reading doc.
+    public static final int RATE_MS_TO_SEC = 1000; // Conversion rate for MS<->SEC
     
     // String Constants
+    //      Color Code Constants
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLACK = "\u001B[30m";
     public static final String ANSI_RED = "\u001B[31m";
@@ -43,6 +47,7 @@ public class Oowa {
     public static final String ANSI_ITALIC = "\u001B[3m";
     public static final String ANSI_BOLD = "\u001B[1m";
     
+    //      Constants for Modes (Querying & Ranked Weights)
     public static final String QUERY_MODE_BOOLEAN = "1";
     public static final String QUERY_MODE_RANKED = "2";
     public static final String WEIGHT_DEFAULT = "1";
@@ -370,13 +375,15 @@ public class Oowa {
     private static void MAP(Index index, DocumentCorpus corpus, String directory) {
         double[][] result = new double[WEIGHT_MODES.length][2];
         
-        int qCount = 0;
+        int qCount = 0; // Keep track of query count for AVG calculation
         try {
+            // Start reading files for Relevances & Queries.
             BufferedReader queryReader = new BufferedReader(
                     new FileReader(directory + "/relevance/queries"));
             BufferedReader relevanceReader = new BufferedReader(
                     new FileReader(directory + "/relevance/qrel"));
 
+            // Read lines into usable strings
             String query = queryReader.readLine();
             String relevance = relevanceReader.readLine();
 
@@ -387,22 +394,33 @@ public class Oowa {
 
                 // Establish relevances
                 String[] ids = relevance.split("\\s+");
-                HashSet relIds = new HashSet(ids.length); // because we don't want to iterate through this every time
+                HashSet relIds = new HashSet(ids.length); // Hash Set because we don't want to iterate through this every time
+                // Now we need to convert the string into usable integers
+                //      we could also leave as strings and convert Postings ids 
+                //      into strings, but this makes a cleaner flow.
                 for (int i = 0; i < ids.length; i++) {
                     relIds.add(Integer.parseInt(ids[i]));
                 }
                 //System.out.println("\tRelevances: " + relIds);
 
+                // Start AP calculaction for every mode
                 int mode = 0;
                 for (String weightMode: WEIGHT_MODES) {
-                    AveragePrecision AP = new AveragePrecision(query, index, corpus, weightMode, relIds);
-                    double AP_q = AP.getAveragePrecision();
-                    double responseTime_q = AP.getResponseTime();
-                    //System.out.println("\t\tAP: " + AP_q);
-                    //System.out.println("\t\tResponse Time: " + responseTime_q);
+                    System.out.println(ANSI_BOLD + "\t\tMode " + WEIGHT_MODES_NAMES[Integer.parseInt(weightMode) - 1] + ": " + ANSI_RESET);
                     
-                    // Precision
+                    AveragePrecision AP = new AveragePrecision(query, index, corpus, weightMode, relIds);
+                    double AP_q = AP.getAveragePrecision(); // Average Precision for this query
+                    double responseTime_q = AP.getResponseTime(); // Response Time for this query
+
+                    // Print results for this weight mode
+                    System.out.println(ANSI_BOLD + "\t\tAP: " + AP_q + ANSI_RESET);
+                    System.out.println(ANSI_BOLD + "\t\tResponse Time: " + responseTime_q + ANSI_RESET);
+                    System.out.println();
+                    
+                    // Sums for AVG calculations at the end
+                    //      Precision Sum
                     result[mode][INDEX_AVG_PRECISION] = result[mode][INDEX_AVG_PRECISION] + AP_q;
+                    //      Response Time Sum
                     result[mode][INDEX_RESPONSE_TIME] = result[mode][INDEX_RESPONSE_TIME] + responseTime_q;
                     mode++;
                 }
@@ -419,6 +437,7 @@ public class Oowa {
         System.out.println();
         for (int i = 0; i < WEIGHT_MODES.length; i++) {
             System.out.println("Mode " + WEIGHT_MODES_NAMES[i]);
+            
             // MAP = (1/|Q|) *   Sum(AP(q))
             double MAP = (1.0 / (double) qCount) * result[i][INDEX_AVG_PRECISION];
             System.out.println(ANSI_RED + "\tMAP: " + ANSI_RESET + MAP);
