@@ -74,8 +74,8 @@ public class AveragePrecision {
         
         //  (1 / |REL| ) * Sum(relevant (i) * P@i)
         double AP_q = 0;
-        if (!rankedResults.isEmpty()) { // we don't want to divide by 0
-            AP_q = ( 1.0 / (double) rankedResults.size() ) * (double) relSum;
+        if (!mRelIds.isEmpty()) { // we don't want to divide by 0
+            AP_q = ( 1.0 / (double) mRelIds.size() ) * (double) relSum;
         }
         
         return AP_q;
