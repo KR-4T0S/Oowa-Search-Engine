@@ -370,7 +370,7 @@ public class Oowa {
     private static void MAP(Index index, DocumentCorpus corpus, String directory) {
         double[][] result = new double[WEIGHT_MODES.length][2];
         
-        double qCount = 0;
+        int qCount = 0;
         try {
             BufferedReader queryReader = new BufferedReader(
                     new FileReader(directory + "/relevance/queries"));
@@ -383,7 +383,7 @@ public class Oowa {
             // for every query.
             while (query != null && relevance != null) {
                 qCount++;
-                System.out.println( qCount + ". " + query);
+                System.out.println(qCount + ". " + query);
 
                 // Establish relevances
                 String[] ids = relevance.split("\\s+");
@@ -420,7 +420,7 @@ public class Oowa {
         for (int i = 0; i < WEIGHT_MODES.length; i++) {
             System.out.println("Mode " + WEIGHT_MODES_NAMES[i]);
             // MAP = (1/|Q|) *   Sum(AP(q))
-            double MAP = (1.0 / qCount) * result[i][INDEX_AVG_PRECISION];
+            double MAP = (1.0 / (double) qCount) * result[i][INDEX_AVG_PRECISION];
             System.out.println(ANSI_RED + "\tMAP: " + ANSI_RESET + MAP);
 
             // Response Time = Time@Results - Time@QueryStart
