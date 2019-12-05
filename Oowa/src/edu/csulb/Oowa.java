@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -409,6 +408,10 @@ public class Oowa {
                     System.out.println(ANSI_BOLD + "\t\tMode " + WEIGHT_MODES_NAMES[Integer.parseInt(weightMode) - 1] + ": " + ANSI_RESET);
                     
                     AveragePrecision AP = new AveragePrecision(query, index, corpus, weightMode, relIds);
+//                    if (qCount == 1) {
+//                        AP.getAveragePrecisionFirstQuery();
+//                        System.out.println();
+//                    } 
                     double AP_q = AP.getAveragePrecision(); // Average Precision for this query
                     double responseTime_q = AP.getResponseTime(); // Response Time for this query
 
