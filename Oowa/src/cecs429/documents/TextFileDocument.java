@@ -48,6 +48,10 @@ public class TextFileDocument implements FileDocument {
         return mFilePath.getFileName().toString();
     }
 
+    public int getFileID() {
+        return mDocumentId;
+    }
+    
     public static FileDocument loadTextFileDocument(Path absolutePath, int documentId) {
         return new TextFileDocument(documentId, absolutePath);
     }

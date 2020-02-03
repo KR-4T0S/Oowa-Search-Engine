@@ -22,6 +22,8 @@ public interface Document {
      */
     String getTitle();
     
+    int getFileID();
+    
     
     double getByeSize();
 }

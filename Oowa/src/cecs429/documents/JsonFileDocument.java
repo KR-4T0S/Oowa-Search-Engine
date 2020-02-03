@@ -17,6 +17,7 @@ public class JsonFileDocument implements FileDocument {
     private final int mDocumentId;
     private final Path mFilePath;
     private final String mTitle;
+    private final int fileId;
 
     /**
      * Constructs a TextFileDocument with the given document ID representing the
@@ -32,6 +33,7 @@ public class JsonFileDocument implements FileDocument {
             // Convert JSON File to Java Object
             JsonDoc file = gson.fromJson(reader, JsonDoc.class);
             mTitle = file.getTitle() + " (\"" + mFilePath.getFileName().toString() + "\")";
+            fileId = file.getId();
             //System.out.println("Loaded: " + mTitle);
             file = null;
         } catch (IOException e) {
@@ -66,6 +68,10 @@ public class JsonFileDocument implements FileDocument {
     @Override
     public String getTitle() {
         return mTitle;
+    }
+    
+    public int getFileID() {
+        return fileId;
     }
 
     public static FileDocument loadJsonFileDocument(Path absolutePath, int documentId) {
